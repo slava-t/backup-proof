@@ -1,0 +1,9 @@
+cython==0.29.21
+requests==2.27.1
+borgbackup==1.1.17
+docker-compose==1.29.2
+pyyaml==5.4.1
+humanize==2.4.0
+python-dateutil==2.6.0
+urllib3==1.26.3
+
