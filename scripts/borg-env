@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+prod=${1:-gitlab}
+environment=${2:-prod}
+repo_path=$(yq -r .repos.main.products.$prod.environments.$environment.repo /data/confirm/enc/.config/.config.yaml)
+repo_pass=$(yq -r .repos.main.products.$prod.environments.$environment.pass /data/confirm/enc/.config/.config.yaml)
+
+export BORG_RSH='ssh -i /data/confirm/enc/.config/.ssh/master -p 22'
+export BORG_REPO="borg@borg:/borg/$repo_path"
+export BORG_PASSPHRASE="$repo_pass"
+

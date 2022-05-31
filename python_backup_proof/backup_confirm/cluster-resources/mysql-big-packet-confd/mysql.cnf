@@ -1,0 +1,19 @@
+[mysql]
+
+[mysqld]
+wait_timeout=28800
+interactive_timeout = 28800
+max_allowed_packet=1024M
+key_buffer_size=2048M
+innodb_log_write_ahead_size=16384
+innodb_doublewrite=0
+innodb_checksum_algorithm=none
+innodb_flush_neighbors=0
+innodb_use_native_aio=0
+innodb_flush_log_at_timeout=20
+innodb_flush_log_at_trx_commit=0
+sync_binlog=0
+innodb_read_io_threads=10
+innodb_write_io_threads=10
+innodb_buffer_pool_size=8G
+
