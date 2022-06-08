@@ -1,0 +1,18 @@
+#!/bin/bash
+set -eu -o pipefail
+basename="sum-"$(date +%s%N)
+tmpdir="/tmp/"
+actual="$tmpdir$basename-a"
+expected="$tmpdir$basename-e"
+trap "rm -f '$expected' '$actual'" EXIT
+tee >(head -n -1 | sha1sum -b >"$actual") > >(tail -n 1 | cut -d ' ' -f 1 --complement >"$expected")
+while fuser "$actual" >/dev/null 2>&1
+do
+  sleep 0.1
+done
+while fuser "$expected" >/dev/null 2>&1
+do
+  sleep 0.1
+done
+sleep 1
+diff "$expected" "$actual" >/dev/null 2>&1

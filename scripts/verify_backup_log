@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+backup_user=${BACKUP_USER:-borg}
+backup_zone=${BACKUP_ZONE:-bk}
+
+prefix_re='^\S+\s*[*]{3}\s*<\s*'
+sufix_re='\s+([0-9]{23})\s*>\s*[*]{3}\s*$'
+
+start_re="$prefix_re"'start'"$sufix_re"
+end_re="$prefix_re"'end'"$sufix_re"
+
+
+log_segment=$(cat | nl | sort -nr | cut -f 2 | sed -En "1,/$start_re/p")
+log_backup_id=$(echo "$log_segment" | sed -En "s/$start_re/\1/p")
+if [ "$log_backup_id" != "$BACKUP_ID" ]; then
+  echo "Could not find the start mark for $BACKUP_ID"
+  exit 1
+fi
+log_end_backup_id=$(echo "$log_segment" | sed -En "s/$end_re/\1/p")
+if [ "$log_end_backup_id" == "" ]; then
+  echo "Could not find the end mark"
+  exit 1
+else
+  if [ "$log_backup_id" != "$log_end_backup_id" ]; then
+    echo "The end mark doesn't match the start mark"
+    exit 1
+  fi
+fi
+
+log_segment=$(echo "$log_segment" | nl | sort -nr | cut -f 2 | sed -En "/$start_re/, /$end_re/p")
+
+all_log_errors=$(echo "$log_segment" | grep -iw error || true)
+no_zone_log_errors=$(echo "$all_log_errors" | grep -vF "$backup_user@" || true)
+zone_log_errors=$(echo "$all_log_errors" | grep F "$backup_user@$backup_zone." || true)
+
+if [ "$no_zone_log_errors" != "" ] || [ "$zone_log_errors" != "" ]; then
+  echo "There are errors in the log"
+  exit 1
+fi
+
