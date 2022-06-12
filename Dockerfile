@@ -4,7 +4,7 @@ ARG IMAGE_ID
 
 ENV BACKUP_PROOF_IMAGE=$IMAGE_ID
 
-RUN apt-get  update && apt-get install lsb-release vim wget openssh-client cron rsyslog python3-pip libssl-dev libacl1-dev mysql-client -yqq
+RUN apt-get  update && apt-get install less lsb-release vim wget openssh-client cron rsyslog python3-pip libssl-dev libacl1-dev mysql-client -yqq
 COPY requirements.txt /tmp/
 RUN pip3 install -r /tmp/requirements.txt && rm /tmp/requirements.txt
 

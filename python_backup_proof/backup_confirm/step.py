@@ -72,8 +72,8 @@ def create_step(ctx, id, data):
     status = {
       'status': 'start'
     }
-    logger.info('-----------create_step id={} data={}'.format(id, data))
     step_dirname = get_step_dirname(id, data.get('name') or 'unknown')
+    logger.info('Creating step \'{}\''.format(step_dirname))
     ctx = get_step_context(ctx, step_dirname)
     step_dir = ctx['step_dir']
     if os.path.isdir(step_dir):
@@ -100,7 +100,7 @@ def create_star_step(
     steps_after = [],
     description=None
 ):
-  logger.info('------------create_star_step: {}, {}'.format(step_id, step_name))
+  logger.info('Creating star step \'{}-{}\''.format(step_id, step_name))
   if description is None:
     description = 'Create confirm steps from {}'.format(steps_path)
   step_data = {
@@ -151,8 +151,6 @@ def save_step_status(ctx, status):
 
 def get_step_context(ctx, stepname):
   step_ctx = ctx.copy()
-  logger.info('------------------------step_ctx: {}'.format(step_ctx))
-  logger.info('---------------------------stepname: {}'.format(stepname))
   step_dir = os.path.join(step_ctx['steps_dir'], stepname)
   step_ctx['step_dir'] = step_dir
   step_ctx['step_status'] = os.path.join(step_dir, 'status.yaml')

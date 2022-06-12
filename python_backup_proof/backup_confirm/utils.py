@@ -6,12 +6,14 @@ import yaml
 from backup_confirm.logger import get_logger
 
 ARCHIVE_NAME_PARTS=4
+PROCESS_NAME_PARTS=5
+PACK_NAME_PARTS=4
 ARCHIVE_ID_REGEX=re.compile('^[0-9]{23}$')
+FID_REGEX=re.compile('^[0-9]{8}-[0-9]{6}-[0-9]{9}$')
+PACK_SUFFIX_REGEX = re.compile('^([0-9]{8}-[0-9]{6}-[0-9]{9})[.]\\S*$')
 NAME_REGEX=re.compile('^[a-z](_?[a-z0-9]+)*$')
+SPACE_SIZE_REGEX = re.compile('^\\s*([0-9]+)\\s*([kKmMgGTt])?\\s*$')
 
-logger = get_logger('utils')
-
-SPACE_SIZE_RE = re.compile('^\s*([0-9]+)\s*([kKmMgGTt])?\s*$')
 size_multipliers = {
   'k': 1000,
   'K': 1024,
@@ -22,6 +24,11 @@ size_multipliers = {
   't': 1000**4,
   'T': 1024**4
 }
+
+logger = get_logger('utils')
+
+def is_fid(fid):
+  return FID_REGEX.match(fid) is not None
 
 def id2fid(id):
   return '{}-{}-{}'.format(id[:8], id[8:14], id[14:])
@@ -69,6 +76,36 @@ def parse_archive_name(name):
       'part': parts[2],
     }
 
+def parse_process_name(name):
+  parts = name.split('-')
+  if len(parts) == PROCESS_NAME_PARTS:
+    archive_name = '{}-{}-{}'.format(
+      '-'.join(parts[:2]),
+      'part',
+      ''.join(parts[2:])
+    )
+    parsed = parse_archive_name(archive_name)
+    if parsed is not None:
+      parsed['orig'] = name
+      return parsed
+
+def parse_packed_part_name(name):
+  components = name.split('-')
+  if len(components) == PACK_NAME_PARTS:
+    part = components[0]
+    pack_suffix = '-'.join(components[1:])
+    pack_suffix_match = PACK_SUFFIX_REGEX.match(pack_suffix)
+    if pack_suffix_match is not None:
+      fid = pack_suffix_match.group(1)
+      if NAME_REGEX.match(part):
+        return {
+          'orig': name,
+          'part': part,
+          'pack_suffex': pack_suffix,
+          'fid': fid,
+          'id': fid2id(fid)
+        }
+
 def parse_borg_list(borg_list_output):
   result = []
   borg_list=borg_list_output.decode('utf8').split('\n')
@@ -79,7 +116,7 @@ def parse_borg_list(borg_list_output):
   return result
 
 def parse_space_size(size_str):
-  match = SPACE_SIZE_RE.match(size_str)
+  match = SPACE_SIZE_REGEX.match(size_str)
   if match is None:
     return None
   if match.lastindex == 1:

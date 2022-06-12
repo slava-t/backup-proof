@@ -41,9 +41,9 @@ def run_verify_preceeding_steps(ctx, params):
     if status_file and not is_path_short(status_file):
       return step_failed(ctx, 'Invalid file name \'{}\''.format(status_file))
     fail_reason = verify_dependencies(ctx, step_data['id'])
-    logger.info('Failed reason: {}'.format(fail_reason))
     set_verified_status(ctx, status_file, fail_reason)
     if fail_reason is not None:
+      logger.info('Failed reason: {}'.format(fail_reason))
       return step_failed(ctx, fail_reason)
     step_success(ctx)
   except Exception as e:

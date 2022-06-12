@@ -31,7 +31,7 @@ from backup_confirm.utils import (
 )
 from backup_confirm.vars import BACKUP_PROOF_IMAGE
 
-PROCESS_SCAN_INTERVAL_IN_SECONDS=1
+PROCESS_SCAN_INTERVAL = 1
 
 ENC_PROCESS_DIR = '/backup/enc/process'
 logger = get_logger('process')
@@ -185,7 +185,7 @@ def get_compose_content(vars):
 
 def create_process(repo_name, repo, prod_env_id, parts):
   product, environment = split_prod_env_id(prod_env_id)
-  logger.info('-----------product: {}'.format(product))
+  logger.info('Creating process for {} {}'.format(product, environment))
   confirm_part = parts.get('confirm')
   zone = repo['zone']
   id = confirm_part.get('id')
@@ -196,11 +196,8 @@ def create_process(repo_name, repo, prod_env_id, parts):
   process_done_path = os.path.join(ENC_PROCESS_DIR, 'done-{}'.format(
     process_id
   ))
-  logger.info('>>>>>>>>>>>>>>>>>>>process_path={}'.format(process_path))
+  logger.info('Process path \'{}\''.format(process_path))
   confirm_steps_path = os.path.join(process_path, 'confirm_steps.yaml')
-  logger.info('>>>>>>>>>>>>>>>>>>>confirm_steps_path={}'.format(
-    confirm_steps_path
-  ))
   process_tmp_path = os.path.join(ENC_PROCESS_DIR, process_tmp_id)
   tmp_ctx = get_process_context(process_tmp_path)
 
@@ -267,7 +264,7 @@ def create_processes(repo_name, repo, confirm_parts):
     create_process(repo_name, repo, prod_env_id, parts)
 
 def process_step(ctx, stepname):
-  logger.info('------------process step: {}'.format(stepname))
+  logger.info('Processing step \'{}\''.format(stepname))
   ctx = get_step_context(ctx, stepname)
   try:
     status_content = read_from_yaml_file(ctx['step_status'])
@@ -296,10 +293,10 @@ def process_step(ctx, stepname):
     })
 
 def start_process(ctx):
-  step_dirname = create_star_step(ctx, 0, 'star', ctx['steps'])
-  logger.info('-------------------start_process step_dirname: {}'.format(
-    step_dirname
+  logger.info('Starting process \'{}\''.format(
+    ctx['main_dir']
   ))
+  step_dirname = create_star_step(ctx, 0, 'star', ctx['steps'])
   status_content = {
     'status': 'step',
     'step': step_dirname
@@ -329,6 +326,7 @@ def process():
     status_content = {
       'status': 'end'
     }
+    logger.info('Finished all steps')
   else:
     status_content = {
       'status': 'step',
@@ -337,21 +335,10 @@ def process():
   write_to_yaml_file(status_content, ctx['status'])
 
 def main():
-    count = 0
     while True:
       try:
-        time.sleep(PROCESS_SCAN_INTERVAL_IN_SECONDS)
-        #logger.info('calling process')
+        time.sleep(PROCESS_SCAN_INTERVAL)
         process()
-        count += 1
-        subprocess.run(
-          [
-            'bash',
-            '-c',
-            'echo "{}" >>/var/log/process_count.log'.format(count)
-          ],
-          check=True
-        )
       except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         logger.error('Processing error: {}'.format(''.join(

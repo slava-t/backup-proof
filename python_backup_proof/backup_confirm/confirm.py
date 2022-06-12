@@ -1,5 +1,5 @@
-import os
 import sys
+import time
 import traceback
 
 from backup_confirm.borg import get_latest_parts, get_borg_credentials
@@ -7,8 +7,10 @@ from backup_confirm.config import get_enc_config
 from backup_confirm.logger import get_logger
 from backup_confirm.process import create_processes
 
+SCAN_AND_PROCESS_INTERVAL = 6 #00 #10 minutes interval
 
 STATE_DIR='/confirm-state'
+ARCHIVE_MAX_AGE = 12 * 3600 #12 hours
 
 logger = get_logger('confirm')
 
@@ -25,7 +27,8 @@ def process_product(repo_name, repo, product_name, environment_id):
     latest_parts = get_latest_parts(
       rsh,
       repo_ref,
-      password
+      password,
+      maxAgeInSeconds=ARCHIVE_MAX_AGE
     ) or {}
     create_processes(repo_name, repo, latest_parts)
 
@@ -40,7 +43,7 @@ def process_product(repo_name, repo, product_name, environment_id):
       )
     )
 
-def main():
+def scan_and_process():
   try:
     #config = load_config(CONFIG_PATH)
     enc_config = get_enc_config()
@@ -59,7 +62,17 @@ def main():
           )
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    logger.error('Error in confirm main function: {}'.format(''.join(
-      traceback.format_exception(exc_type, exc_value, exc_traceback)
-    )))
+    logger.error('Error in confirm scan_and_process function: {}'.format(
+      ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    ))
 
+def main():
+  try:
+    while True:
+      scan_and_process()
+      time.sleep(SCAN_AND_PROCESS_INTERVAL)
+  except:
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    logger.error('Error in confirm main function: {}'.format(
+      ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    ))

@@ -28,7 +28,7 @@ def split_steps(steps, steps_after):
 
 
 def run_star_command(ctx, params):
-  logger.info('----------------run_star_command: {}'.format(params))
+  logger.info('Runnin star command {}'.format(params))
   steps_after = params.get('steps') or []
   next_id = generate_next_step_id(ctx)
   steps_path = params.get('path')
@@ -41,9 +41,6 @@ def run_star_command(ctx, params):
       '\'*\' command expects steps to be present and to be a list'
     )
   before, star, after = split_steps(steps, steps_after)
-  logger.info('>>>>>>>>>before: {}'.format(before))
-  logger.info('>>>>>>>>>star: {}'.format(star))
-  logger.info('>>>>>>>>>after: {}'.format(after))
   next_id = create_steps(ctx, next_id, before)
   if star is not None:
     params = star.get('params') or {}

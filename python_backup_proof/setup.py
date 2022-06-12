@@ -19,7 +19,8 @@ setup(
   entry_points={
     'console_scripts': [
       'run_confirm_process = backup_confirm.process:main',
-      'confirm = backup_confirm.confirm:main',
+      'run_confirm_service = backup_confirm.confirm:main',
+      'run_confirm_complete = backup_confirm.complete:main'
     ],
   },
 )

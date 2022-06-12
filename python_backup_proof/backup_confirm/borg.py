@@ -76,7 +76,7 @@ def get_borg_archive_names():
       rsh,
       repo,
       password,
-      '/usr/local/bin/borg list --short'
+      '/usr/local/bin/borg list --short --lock-wait 20'
     )
     res = subprocess.run(
       [
@@ -98,9 +98,9 @@ def delete_borg_archives(archives):
     if archives is None or len(archives) == 0:
       return True
     repo, rsh, password = get_config_borg_credentials();
-    borg_command = '/usr/local/bin/borg delete --save-space ::{}'.format(
-      ' '.join(archives)
-    )
+    borg_command = (
+      '/usr/local/bin/borg delete --lock-wait 20 --save-space ::{}'
+    ).format(' '.join(archives))
     borg_bash_command = get_borg_bash_command(
       rsh,
       repo,
@@ -135,7 +135,9 @@ def extract_part(ctx, part):
       part,
       CONFIRM_TIMESTAMP_ID
     )
-    borg_command = '/usr/local/bin/borg extract ::{}'.format(archive_id)
+    borg_command = '/usr/local/bin/borg extract --lock-wait 20 ::{}'.format(
+      archive_id
+    )
     borg_bash_command = get_borg_bash_command(
       rsh,
       repo_ref,
@@ -160,7 +162,7 @@ def extract_part(ctx, part):
 def check_borg_data():
   try:
     repo_ref, rsh, password = get_config_borg_credentials();
-    borg_command = '/usr/local/bin/borg check --verify-data'
+    borg_command = '/usr/local/bin/borg check --lock-wait 20 --verify-data'
     borg_bash_command = get_borg_bash_command(
       rsh,
       repo_ref,
@@ -184,11 +186,9 @@ def check_borg_data():
 def prefix_archive_name(rsh, repo, password, prefix, archive):
   try:
     logger.info('Prefixing archive: {}'.format(archive))
-    borg_command = '/usr/local/bin/borg rename "::{}" "{}-{}"'.format(
-      archive,
-      prefix,
-      archive
-    )
+    borg_command = (
+      '/usr/local/bin/borg rename --lock-wait 20 "::{}" "{}-{}"'
+    ).format(archive, prefix, archive)
     borg_bash_command = get_borg_bash_command(
       rsh,
       repo,
