@@ -3,10 +3,8 @@ from os.path import join, isdir, exists
 import yaml
 
 from backup_confirm.logger import get_logger
+from backup_confirm.paths import CONFIG_PATH, ENC_CONFIG_PATH
 from backup_confirm.utils import read_from_yaml_file
-
-CONFIG_PATH = '/backup/config/.config.yaml'
-ENC_CONFIG_PATH = '/backup/enc/.config.yaml'
 
 config = None
 enc_config = None

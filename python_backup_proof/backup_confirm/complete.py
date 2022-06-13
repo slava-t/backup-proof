@@ -9,7 +9,9 @@ import time
 import traceback
 
 from backup_confirm.logger import get_logger
-from backup_confirm.step import split_stepname
+from backup_confirm.notification import notify
+from backup_confirm.paths import ENC_PROCESS_DIR, VERIFIED_DIR, FAILED_DIR
+from backup_confirm.report import create_process_report, add_complete_step
 from backup_confirm.utils import (
   is_fid,
   parse_process_name,
@@ -18,9 +20,6 @@ from backup_confirm.utils import (
 )
 
 SCAN_AND_COMPLETE_INTERVAL = 6 #0 #1 minute
-ENC_PROCESS_DIR = '/backup/enc/process'
-VERIFIED_DIR = '/backup/enc/verified'
-FAILED_DIR = '/backup/enc/failed'
 DONE_PREFIX = 'done-'
 MAX_PROCESS_AGE = 24 * 3600 #24 hours
 
@@ -77,47 +76,6 @@ def move_process(process_descriptor, mark_as_done, reason = None):
     )))
   return False
 
-def create_process_report(process_path):
-  steps = []
-  complete_steps = []
-  report_data = {
-    'steps': steps,
-    'complete_steps': complete_steps
-  }
-  try:
-    data_status_path = os.path.join(process_path, 'data_status.yaml')
-    steps_dir = os.path.join(process_path, 'steps')
-    data_status = read_from_yaml_file(data_status_path)
-    report_data['valid_data'] = data_status.get('status') == 'success'
-    step_names = sorted(os.listdir(steps_dir))
-    for step_name in step_names:
-      _, name = split_stepname(step_name)
-      step_dir = os.path.join(steps_dir, step_name)
-      step_status_path = os.path.join(step_dir, 'status.yaml')
-      step_path = os.path.join(step_dir, 'step.yaml')
-      step_status = read_from_yaml_file(step_status_path)
-      step = read_from_yaml_file(step_path)
-      steps.append({
-        'name': name,
-        'desctiption': step.get('desctiption', name),
-        'status': step_status.get('status', 'unknown')
-      })
-  except:
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    logger.error('Processing error: {}'.format(''.join(
-      traceback.format_exception(exc_type, exc_value, exc_traceback)
-    )))
-    add_complete_step(report_data, 'report_creation', 'Creating report', False)
-
-  return report_data
-
-def add_complete_step(report_data, name, description, success):
-  report_data['complete_steps'].append({
-    'step': name,
-    'description': description,
-    'status': 'success' if success else 'failed'
-  })
-
 def docker_compose_down(process_dir):
   try:
     logger.info('Shutting down process \'{}\''.format(process_dir))
@@ -168,11 +126,10 @@ def prune_failed_dirs(report_data, process_descriptor):
   result = prune_env_dir(env_dir, KEEP_FAILED)
   add_complete_step(
     report_data,
-    'prune_verified_dirs',
-    'Prune verified process directories',
+    'prune_failed_dirs',
+    'Prune failed process directories',
     result
   )
-
 
 def prune_verified_dirs(report_data, process_descriptor):
   env_dir = get_env_dir(VERIFIED_DIR, process_descriptor)
@@ -204,7 +161,6 @@ def move_process_to_history(report_data, process_descriptor):
       move_result
     )
 
-
 def check_and_complete(process_descriptor):
   report_data = {}
   try:
@@ -214,18 +170,26 @@ def check_and_complete(process_descriptor):
     if status['status'] != 'end':
       return
     logger.info('Completing starts for \'{}\''.format(process_path))
-    report_data = create_process_report(process_path)
+    report_data = create_process_report(process_descriptor)
+    logger.info('Invoking shutdown_process for \'{}\''.format(process_name))
     shutdown_process(report_data, process_descriptor)
+    logger.info('Invoking move_process_to_history for \'{}\''.format(
+      process_name
+    ))
     move_process_to_history(report_data, process_descriptor)
+    logger.info('Invoking prune_verified_dirs for \'{}\''.format(process_name))
     prune_verified_dirs(report_data, process_descriptor)
+    logger.info('Invoking prune_failed_dirs for \'{}\''.format(process_name))
     prune_failed_dirs(report_data, process_descriptor)
-
-
+    logger.info('Invoking notify for \'{}\''.format(process_name))
+    notify(report_data)
+    logger.info('Completion finished for \'{}\''.format(process_name))
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     logger.error('Error in check_and_complete function: {}'.format(
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
+
 def prune_done_markers(names, process_descriptor):
   try:
     now = datetime.now(timezone.utc)
@@ -253,11 +217,9 @@ def scan_and_complete():
     x[len(DONE_PREFIX):] for x in all_process_names if x.startswith(DONE_PREFIX)
   ])
   process_names = [x for x in all_process_names if x not in done]
-#  logger.info('--------------------process_names: {}'.format(process_names))
   for process_name in process_names:
     process_descriptor = parse_process_name(process_name)
     if process_descriptor is None:
-#      logger.info('------------process desctiptor is None')
       continue
     process_age = (now - process_descriptor['time']).total_seconds()
     if process_age > MAX_PROCESS_AGE:

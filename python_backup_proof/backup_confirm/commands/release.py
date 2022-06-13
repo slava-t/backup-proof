@@ -1,7 +1,8 @@
 from backup_confirm.logger import get_logger
-from backup_confirm.step import step_success
 from backup_confirm.pack import pack_parts, prune_parts
-RELEASE_DIR = '/backup/ready'
+from backup_confirm.paths import RELEASE_DIR
+from backup_confirm.step import step_success
+
 PACKS_TO_KEEP = 5
 
 logger = get_logger('release command')

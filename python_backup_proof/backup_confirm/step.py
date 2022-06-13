@@ -106,7 +106,7 @@ def create_star_step(
   step_data = {
     'name': step_name,
     'command': '*',
-    'desctiption': description,
+    'description': description,
     'params': {
       'path': steps_path,
       'steps': steps_after

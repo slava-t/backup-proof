@@ -9,7 +9,6 @@ from backup_confirm.process import create_processes
 
 SCAN_AND_PROCESS_INTERVAL = 6 #00 #10 minutes interval
 
-STATE_DIR='/confirm-state'
 ARCHIVE_MAX_AGE = 12 * 3600 #12 hours
 
 logger = get_logger('confirm')

@@ -18,6 +18,7 @@ from backup_confirm.confirm_vars import (
 
 from backup_confirm.command_runner import run_command
 from backup_confirm.logger import get_logger
+from backup_confirm.paths import ENC_PROCESS_DIR
 from backup_confirm.step import (
   get_step_context,
   get_next_step,
@@ -33,7 +34,6 @@ from backup_confirm.vars import BACKUP_PROOF_IMAGE
 
 PROCESS_SCAN_INTERVAL = 1
 
-ENC_PROCESS_DIR = '/backup/enc/process'
 logger = get_logger('process')
 
 
@@ -144,15 +144,10 @@ def get_compose_content(vars):
         'volumes':[
           '/data/enc:/enc',
           '/data/backup/.config:/backup/config',
-#          '/data/backup/state:/backup/state',
           '/data/backup/enc:/backup/enc',
           '/data/backup/logs:/backup/logs',
           '/data/backup/ready:/backup/ready',
           '/data/backup/public:/backup/public',
-          #TODO change this later
-          '/data/confirmer/ssh:/root/.ssh',
-          #TODO remove the next volume
-          '/home/slava/projects/backup-proof/python_backup_proof:/python_backup_proof'
         ],
         'image': BACKUP_PROOF_IMAGE,
         'restart': 'unless-stopped',

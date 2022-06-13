@@ -1,8 +1,8 @@
 from backup_confirm.logger import get_logger
 from backup_confirm.step import step_success
 from backup_confirm.pack import pack_parts, prune_parts
+from backup_confirm.paths import PUBLISH_DIR
 
-PUBLISH_DIR = '/backup/public'
 PACKS_TO_KEEP = 3
 
 logger = get_logger('publish command')

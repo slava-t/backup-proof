@@ -53,8 +53,7 @@ def run_star_command(ctx, params):
       star.get('name') or 'star',
       steps_path,
       steps_after=after,
-      description=star.get('desctiption')
+      description=star.get('description')
     )
-#    create_steps(ctx, next_id + 1, after)
   step_success(ctx)
 

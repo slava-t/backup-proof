@@ -4,7 +4,6 @@ import logging.config
 
 from backup_confirm.confirm_vars import CONFIRM_PROCESS_LOG
 LOG_LEVEL=logging.INFO
-#TODO take the filename for the logger from an environment variable
 
 log_path = '/backup/logs/backup-confirm.log'
 

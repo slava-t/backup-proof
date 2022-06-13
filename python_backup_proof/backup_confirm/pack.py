@@ -30,13 +30,10 @@ def get_password(pack_pass, packname):
   return clean_digest[0:24]
 
 def pack_dir(src_dir, dest_path, password, gz=False):
-  #TODO: we should look wich compression to use
-  # by default gpg uses commpression too
-  # we should add the '-z 0' option to disable compression in gpg
   logger.info('Packing dir \'{}\' to \'{}\''.format(src_dir, dest_path))
   flags = '-c{}f'.format('z' if gz else '')
   pack_command = (
-    '/bin/tar {} - * | /bin/gpg --batch -o "{}" -c'.format(
+    '/bin/tar {} - * | /bin/gpg --batch -o "{}" -c -z 0'.format(
       flags,
       dest_path
   ))
