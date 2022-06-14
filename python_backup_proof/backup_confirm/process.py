@@ -143,7 +143,6 @@ def get_compose_content(vars):
       'confirm': {
         'volumes':[
           '/data/enc:/enc',
-          '/data/backup/.config:/backup/config',
           '/data/backup/enc:/backup/enc',
           '/data/backup/logs:/backup/logs',
           '/data/backup/ready:/backup/ready',
@@ -180,7 +179,6 @@ def get_compose_content(vars):
 
 def create_process(repo_name, repo, prod_env_id, parts):
   product, environment = split_prod_env_id(prod_env_id)
-  logger.info('Creating process for {} {}'.format(product, environment))
   confirm_part = parts.get('confirm')
   zone = repo['zone']
   id = confirm_part.get('id')
@@ -191,13 +189,15 @@ def create_process(repo_name, repo, prod_env_id, parts):
   process_done_path = os.path.join(ENC_PROCESS_DIR, 'done-{}'.format(
     process_id
   ))
-  logger.info('Process path \'{}\''.format(process_path))
   confirm_steps_path = os.path.join(process_path, 'confirm_steps.yaml')
   process_tmp_path = os.path.join(ENC_PROCESS_DIR, process_tmp_id)
   tmp_ctx = get_process_context(process_tmp_path)
 
   if os.path.isdir(process_path) or os.path.isfile(process_done_path):
     return
+  logger.info('Creating process for {} {}'.format(product, environment))
+  logger.info('Process path \'{}\''.format(process_path))
+  logger.info('Process tmp path \'{}\''.format(process_tmp_path))
   os.mkdir(process_tmp_path, 0o600)
   os.mkdir(tmp_ctx['parts_dir'], 0x600)
   os.mkdir(tmp_ctx['steps_dir'], 0o600)
@@ -241,8 +241,12 @@ def create_process(repo_name, repo, prod_env_id, parts):
     }),
     tmp_ctx['docker-compose']
   )
+  logger.info('Renaming \'{}\' to \'{}\''.format(
+    process_tmp_path,
+    process_path
+  ))
   os.rename(process_tmp_path, process_path)
-  logger.info('running docker compose');
+  logger.info('running docker compose in \'{}\''.format(process_path));
   subprocess.run(
     [
       '/usr/local/bin/docker-compose',

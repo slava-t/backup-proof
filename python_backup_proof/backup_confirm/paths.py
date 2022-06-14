@@ -1,4 +1,3 @@
-CONFIG_PATH = '/backup/config/.config.yaml'
 ENC_CONFIG_PATH = '/backup/enc/.config.yaml'
 ENC_PROCESS_DIR = '/backup/enc/process'
 VERIFIED_DIR = '/backup/enc/verified'

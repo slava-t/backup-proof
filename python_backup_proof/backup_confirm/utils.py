@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from pathlib import Path
 import re
+import sys
+import traceback
 import yaml
 
 from backup_confirm.logger import get_logger
@@ -133,6 +135,17 @@ def write_to_yaml_file(data, yaml_path):
 def read_from_yaml_file(yaml_path):
   with open(yaml_path, 'r') as stream:
     return yaml.safe_load(stream)
+
+def get_yaml(yaml_path, default_value = None):
+  try:
+    return read_from_yaml_file(yaml_path)
+  except:
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    logger.error('Getting yaml error: {}'.format(''.join(
+      traceback.format_exception(exc_type, exc_value, exc_traceback)
+    )))
+  return default_value
+
 
 def split_prod_env_id(prod_env_id):
   id_parts = prod_env_id.split('-')

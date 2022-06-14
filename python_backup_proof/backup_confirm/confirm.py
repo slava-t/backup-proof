@@ -7,7 +7,7 @@ from backup_confirm.config import get_enc_config
 from backup_confirm.logger import get_logger
 from backup_confirm.process import create_processes
 
-SCAN_AND_PROCESS_INTERVAL = 6 #00 #10 minutes interval
+SCAN_AND_PROCESS_INTERVAL = 16 #00 #10 minutes interval
 
 ARCHIVE_MAX_AGE = 12 * 3600 #12 hours
 
@@ -44,9 +44,7 @@ def process_product(repo_name, repo, product_name, environment_id):
 
 def scan_and_process():
   try:
-    #config = load_config(CONFIG_PATH)
     enc_config = get_enc_config()
-    #logger.info('enc_config={}'.format(enc_config))
     repos = enc_config.get('repos') or {}
     for repo_name, repo in repos.items():
       products = repo.get('products') or {}

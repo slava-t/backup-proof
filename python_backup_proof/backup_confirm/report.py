@@ -5,7 +5,7 @@ import traceback
 from backup_confirm.logger import get_logger
 from backup_confirm.process import ENC_PROCESS_DIR
 from backup_confirm.step import split_stepname
-from backup_confirm.utils import read_from_yaml_file
+from backup_confirm.utils import get_yaml
 
 logger = get_logger('report')
 
@@ -20,13 +20,15 @@ def create_process_report(process_descriptor):
   }
   try:
     process_name = process_descriptor['orig']
+    logger.info('Create process report for \'{}\''.format(process_name))
     process_path = os.path.join(ENC_PROCESS_DIR, process_name)
     data_status_path = os.path.join(process_path, 'data_status.yaml')
     parts_yaml_path = os.path.join(process_path, 'parts.yaml')
     steps_dir = os.path.join(process_path, 'steps')
-    data_status = read_from_yaml_file(data_status_path)
+    data_status = get_yaml(data_status_path, {})
+    logger.info('Data status for \'{}\': {}'.format(process_name, data_status))
     report_data['valid_data'] = data_status.get('status') == 'success'
-    parts = read_from_yaml_file(parts_yaml_path)
+    parts = get_yaml(parts_yaml_path, {})
     report_data['zone'] = parts.get('zone', 'unknown')
     report_data['product'] = process_descriptor['prod']
     report_data['environment'] = process_descriptor['env']
@@ -37,14 +39,17 @@ def create_process_report(process_descriptor):
       step_dir = os.path.join(steps_dir, step_name)
       step_status_path = os.path.join(step_dir, 'status.yaml')
       step_path = os.path.join(step_dir, 'step.yaml')
-      step_status = read_from_yaml_file(step_status_path)
-      step = read_from_yaml_file(step_path)
+      step_status = get_yaml(step_status_path, {})
+      step = get_yaml(step_path)
       steps.append({
         'name': name,
         'description': step.get('description', name),
         'status': step_status.get('status', 'unknown')
       })
     report_data['report'] = True
+    logger.info('Done creating process report for \'{}\''.format(
+      process_name
+    ))
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     logger.error('Processing error: {}'.format(''.join(
