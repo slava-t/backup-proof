@@ -7,7 +7,7 @@ from backup_confirm.config import get_enc_config
 from backup_confirm.logger import get_logger
 from backup_confirm.process import create_processes
 
-SCAN_AND_PROCESS_INTERVAL = 16 #00 #10 minutes interval
+SCAN_AND_PROCESS_INTERVAL = 180 #3 minutes interval
 
 ARCHIVE_MAX_AGE = 12 * 3600 #12 hours
 
