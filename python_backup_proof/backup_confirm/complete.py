@@ -31,9 +31,9 @@ SCAN_AND_COMPLETE_INTERVAL = 120 #2 minutes
 DONE_PREFIX = 'done-'
 MAX_PROCESS_AGE = 24 * 3600 #24 hours
 
-ZPOOL_CHECK_INTERVAL = 600
-MAX_ZPOOL_STATUS_AGE = 1800 #30 minutes
-MOUNT_ENC_DETECTION_INTERVAL = 600
+ZPOOL_CHECK_INTERVAL = 3600 #1 hour
+MAX_ZPOOL_STATUS_AGE = 3600 #30 minutes
+MOUNT_ENC_DETECTION_INTERVAL = 3600 #1 hour
 
 KEEP_VERIFIED = 2 #30
 KEEP_FAILED = 2 #10
@@ -272,12 +272,13 @@ def check_zpool_status():
           ZPOOL_STATUS_PATH
         )
       elif now - os.path.getmtime(ZPOOL_STATUS_PATH) > MAX_ZPOOL_STATUS_AGE:
-        failure_data['text'] = 'File \'{}\' is too old';
+        failure_data['text'] = 'File \'{}\' is too old'.format(
+          ZPOOL_STATUS_PATH
+        );
       else:
         result = subprocess.run(
           [
             '/usr/local/bin/verify_zpool_status',
-            '-c',
             ZPOOL_STATUS_PATH,
             str(expected_count)
           ]
@@ -292,7 +293,7 @@ def check_zpool_status():
       logger.info('Sending success zpool status notification for \'{}\''.format(
         handle
       ))
-      notify(
+      return notify(
         handle,
         {
           'success': True,
@@ -326,7 +327,7 @@ def check_enc_mount_status():
       logger.info('Sending success enc mount notification for \'{}\''.format(
         handle
       ))
-      notify(
+      return notify(
         handle,
         {
           'success': True,
@@ -349,9 +350,7 @@ def main():
   count = 1
   while True:
     try:
-      #logger.info('-----------count={}'.format(count))
       if count % SCAN_AND_COMPLETE_INTERVAL == 0:
-        #logger.info('scan_and_complete starting')
         scan_and_complete()
       if count % ZPOOL_CHECK_INTERVAL == 0:
         check_zpool_status()
