@@ -134,8 +134,11 @@ def split_stepname(stepname, throw = True):
     return (None, None)
   return (int(id), '-'.join(stepname_parts[1:]))
 
+def format_step_id(id):
+  return str(id).rjust(STEP_ID_LEN, '0')
+
 def get_step_dirname(step_id, name):
-  return '{}-{}'.format(str(step_id).rjust(STEP_ID_LEN, '0'), name)
+  return '{}-{}'.format(format_step_id(step_id), name)
 
 def save_step_status(ctx, status):
   try:

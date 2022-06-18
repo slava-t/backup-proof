@@ -4,7 +4,7 @@ import traceback
 
 from backup_confirm.logger import get_logger
 from backup_confirm.process import ENC_PROCESS_DIR
-from backup_confirm.step import split_stepname
+from backup_confirm.step import split_stepname, format_step_id
 from backup_confirm.utils import get_yaml
 
 logger = get_logger('report')
@@ -19,6 +19,11 @@ def create_process_report(process_descriptor):
     'complete_steps': complete_steps
   }
   try:
+    report_data['product'] = process_descriptor['prod']
+    report_data['environment'] = process_descriptor['env']
+    report_data['fid'] = process_descriptor['fid']
+    report_data['timestamp'] = process_descriptor['time'].isoformat()
+
     process_name = process_descriptor['orig']
     logger.info('Create process report for \'{}\''.format(process_name))
     process_path = os.path.join(ENC_PROCESS_DIR, process_name)
@@ -30,18 +35,16 @@ def create_process_report(process_descriptor):
     report_data['valid_data'] = data_status.get('status') == 'success'
     parts = get_yaml(parts_yaml_path, {})
     report_data['zone'] = parts.get('zone', 'unknown')
-    report_data['product'] = process_descriptor['prod']
-    report_data['environment'] = process_descriptor['env']
-    report_data['fid'] = process_descriptor['fid']
     step_names = sorted(os.listdir(steps_dir))
     for step_name in step_names:
-      _, name = split_stepname(step_name)
+      id, name = split_stepname(step_name)
       step_dir = os.path.join(steps_dir, step_name)
       step_status_path = os.path.join(step_dir, 'status.yaml')
       step_path = os.path.join(step_dir, 'step.yaml')
       step_status = get_yaml(step_status_path, {})
       step = get_yaml(step_path)
       steps.append({
+        'id': id,
         'name': name,
         'description': step.get('description', name),
         'status': step_status.get('status', 'unknown')
@@ -66,10 +69,11 @@ def add_complete_step(report_data, name, description, success):
     'status': 'success' if success else 'failed'
   })
 
-def format_report_line(status, description):
-  return '  {:<10} {}'.format(status.upper(), description)
+def format_report_line(status, description, id = None):
+  id_str = '' if id is None else '{} '.format(format_step_id(id))
+  return '  {:<10} {}{}'.format(status.upper(), id_str, description)
 
-def format_bool_line(status, description):
+def format_bool_line(status, description, id = None):
   return format_report_line(
     'success' if status else 'failed',
     description
@@ -111,7 +115,8 @@ def add_steps(lines, title, steps):
     for step in steps:
       lines.append(format_report_line(
         step.get('status', 'failed'),
-        step.get('description', step.get('name', 'unknown'))
+        step.get('description', step.get('name', 'unknown')),
+        step.get('id')
       ))
 
 def create_text_report(outcome):

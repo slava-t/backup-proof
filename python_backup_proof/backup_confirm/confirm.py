@@ -63,6 +63,8 @@ def scan_and_process():
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
 
+
+
 def main():
   try:
     while True:

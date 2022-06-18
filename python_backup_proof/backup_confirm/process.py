@@ -144,6 +144,8 @@ def get_compose_content(vars):
         'volumes':[
           '/data/enc:/enc',
           '/data/backup/enc:/backup/enc',
+          '/data/backup/var:/backup/var',
+          '/data/backup/.config:/backup/.config:ro',
           '/data/backup/logs:/backup/logs',
           '/data/backup/ready:/backup/ready',
           '/data/backup/public:/backup/public',

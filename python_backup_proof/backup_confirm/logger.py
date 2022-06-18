@@ -5,7 +5,7 @@ import logging.config
 from backup_confirm.confirm_vars import CONFIRM_PROCESS_LOG
 LOG_LEVEL=logging.INFO
 
-log_path = '/backup/logs/backup-confirm.log'
+log_path = '/backup/var/logs/backup-confirm.log'
 
 if CONFIRM_PROCESS_LOG:
   log_path = CONFIRM_PROCESS_LOG

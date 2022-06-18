@@ -4,7 +4,7 @@ from backup_confirm.borg import (
   get_borg_archive_names,
   delete_borg_archives
 )
-
+from backup_confirm.logger import get_logger
 from backup_confirm.step import step_success, step_failed
 from backup_confirm.utils import (
   parse_archive_name
@@ -13,7 +13,10 @@ VERIFIED_PREFIX = 'v-'
 MAX_VERIFIED = 3
 MAX_UNVERIFIED = 3
 
+logger = get_logger('clean_borg_repo')
+
 def run_clean_borg_repo(ctx, _):
+  logger.info('Cleaning borg repo command')
   archives = list(reversed(get_borg_archive_names()))
   to_delete = []
   known_parts = {}
@@ -50,6 +53,7 @@ def run_clean_borg_repo(ctx, _):
         unverified.append(archive)
       else:
         to_delete.append(archive)
+  logger.info('Archives to delete: {}'.format(to_delete))
   if delete_borg_archives(to_delete):
     return step_success(ctx)
   return step_failed(ctx, 'Borg repo cleaning failed')

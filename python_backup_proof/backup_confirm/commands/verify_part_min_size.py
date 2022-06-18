@@ -11,8 +11,9 @@ logger = get_logger('verify_part_min_size')
 DEFAULT_MIN_SIZE = '1M'
 
 def run_verify_part_min_size(ctx, params):
+  logger.info('Running verify part min size with params: {}'.format(params))
   part = params.get('part')
-  size_str = params.get('size') or DEFAULT_MIN_SIZE
+  size_str = str(params.get('size') or DEFAULT_MIN_SIZE)
   if part is None:
     raise Exception('Verify sha1sum expects \'part\' in params')
   size = parse_space_size(size_str)

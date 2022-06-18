@@ -87,16 +87,18 @@ def get_borg_archive_names():
       check=True,
       capture_output=True
     )
-    return res.stdout.decode('utf8').split('\n')
-  except Exception as e:
+    lines = res.stdout.decode('utf8').split('\n')
+    return [x for x in lines if x.strip() != '']
+  except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log_borg_exception(exc_type, exc_value, exc_traceback)
-    raise e
+    raise Exception('Getting borg archive names failed')
 
 def delete_borg_archives(archives):
   try:
     if archives is None or len(archives) == 0:
       return True
+    logger.info('Deleting borg archives: \n{}'.format('\n'.join(archives)))
     repo, rsh, password = get_config_borg_credentials();
     borg_command = (
       '/usr/local/bin/borg delete --lock-wait 20 --save-space ::{}'
