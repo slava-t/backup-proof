@@ -85,10 +85,10 @@ def get_steps_content(confirm_steps_path):
         'path': confirm_steps_path
       },
       'dependencies': ['create_confirm_steps_yaml']
-    }, {
-      'name': 'check_borg_data',
-      'description': 'Run \'borg check\' for borg repo integrity',
-      'command': 'check_borg_data'
+#    }, {
+#      'name': 'check_borg_data',
+#      'description': 'Run \'borg check\' for borg repo integrity',
+#      'command': 'check_borg_data'
     }, {
       'name': 'verify_data_status',
       'description': 'Verify data status based on previous steps',
@@ -96,20 +96,20 @@ def get_steps_content(confirm_steps_path):
       'params': {
         'status': 'data_status.yaml'
       }
-    }, {
-      'name': 'publish',
-      'description': (
-        'Make the parts available for downloading'
-      ),
-      'command': 'publish',
-      'dependencies': ['verify_data_status']
-    }, {
-      'name': 'release',
-      'description': (
-        'Make the parts available for restoring'
-      ),
-      'command': 'release',
-      'dependencies': ['verify_data_status']
+#    }, {
+#      'name': 'publish',
+#      'description': (
+#        'Make the parts available for downloading'
+#      ),
+#      'command': 'publish',
+#      'dependencies': ['verify_data_status']
+#    }, {
+#      'name': 'release',
+#      'description': (
+#        'Make the parts available for restoring'
+#      ),
+#      'command': 'release',
+#      'dependencies': ['verify_data_status']
     }, {
       'name': 'mark_verified_in_borg',
       'description': 'Mark the verified parts in borg',
