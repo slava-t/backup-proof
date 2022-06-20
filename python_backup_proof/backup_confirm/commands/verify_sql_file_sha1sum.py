@@ -12,7 +12,7 @@ def run_verify_sql_file_sha1sum(ctx, params):
   if file is None:
     return step_failed(ctx, 'Missing \'file\' entry in params')
   if not is_path_short(part):
-    return step_failed(ctx, 'Ivalid part \'{}\''.format(part))
+    return step_failed(ctx, 'Invalid part \'{}\''.format(part))
   if not is_path_safe(file):
     return step_failed(ctx, 'Invalid filename file \'{}\''.format(file))
   file_path = os.path.join(ctx['parts_dir'], part, file)

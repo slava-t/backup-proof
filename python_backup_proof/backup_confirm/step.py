@@ -1,12 +1,18 @@
 import os
 import re
 import sys
+import traceback
 
+from backup_confirm.context import get_step_context
 from backup_confirm.logger import get_logger
-from backup_confirm.utils import write_to_yaml_file, read_from_yaml_file
+from backup_confirm.utils import (
+  write_to_yaml_file,
+  read_from_yaml_file,
+  get_yaml,
+  format_step_id,
+  split_stepname
+)
 
-STEP_ID_LEN = 4
-STEP_ID_RE = re.compile('^[0-9]{4}$')
 
 logger = get_logger('step')
 
@@ -34,6 +40,16 @@ def step_skipped(ctx, reason='unknown'):
       'reason': reason
   }
   write_to_yaml_file(status, ctx['step_status'])
+
+
+def get_step_info(ctx):
+  try:
+    return get_yaml(ctx['step'])
+  except:
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    logger.error('Function get_step_info failed: {}'.format(''.join(
+      traceback.format_exception(exc_type, exc_value, exc_traceback)
+    )))
 
 def verify_dependencies(ctx, step_id, dependencies = None):
   steps_dir = ctx['steps_dir']
@@ -114,29 +130,6 @@ def create_star_step(
   }
   return create_step(ctx, step_id, step_data)
 
-def split_stepname(stepname, throw = True):
-  stepname_parts = stepname.split('-')
-  if len(stepname_parts) < 2:
-    if throw:
-      raise Exception(
-        'Step name \'{}\' does not consist of at least two parts'.format(stepname)
-      )
-    return (None, None)
-  id = stepname_parts[0]
-  if not STEP_ID_RE.match(id):
-    if throw:
-      raise Exception((
-        'Invalid id \'{}\' in the step name \'{}\''.format(
-          id,
-          stepname
-        )
-      ))
-    return (None, None)
-  return (int(id), '-'.join(stepname_parts[1:]))
-
-def format_step_id(id):
-  return str(id).rjust(STEP_ID_LEN, '0')
-
 def get_step_dirname(step_id, name):
   return '{}-{}'.format(format_step_id(step_id), name)
 
@@ -151,14 +144,6 @@ def save_step_status(ctx, status):
     ))
     logger.info('exception type: {}'.format(exc_type))
     logger.info('exception value: {}'.format(exc_value))
-
-def get_step_context(ctx, stepname):
-  step_ctx = ctx.copy()
-  step_dir = os.path.join(step_ctx['steps_dir'], stepname)
-  step_ctx['step_dir'] = step_dir
-  step_ctx['step_status'] = os.path.join(step_dir, 'status.yaml')
-  step_ctx['step'] = os.path.join(step_dir, 'step.yaml')
-  return step_ctx
 
 def generate_next_step_id(ctx):
   stepnames = sorted(os.listdir(ctx['steps_dir']))

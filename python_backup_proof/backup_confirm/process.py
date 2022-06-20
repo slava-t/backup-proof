@@ -17,8 +17,12 @@ from backup_confirm.confirm_vars import (
 )
 
 from backup_confirm.command_runner import run_command
+from backup_confirm.context import get_process_context
 from backup_confirm.logger import get_logger
-from backup_confirm.paths import ENC_PROCESS_DIR
+from backup_confirm.paths import (
+  ENC_PROCESS_DIR
+)
+
 from backup_confirm.step import (
   get_step_context,
   get_next_step,
@@ -35,18 +39,6 @@ from backup_confirm.vars import BACKUP_PROOF_IMAGE
 PROCESS_SCAN_INTERVAL = 1
 
 logger = get_logger('process')
-
-
-def get_process_context(root_dir):
-  return {
-    'main_dir': root_dir,
-    'parts_dir': os.path.join(root_dir, 'parts'),
-    'steps_dir': os.path.join(root_dir, 'steps'),
-    'parts': os.path.join(root_dir, 'parts.yaml'),
-    'steps': os.path.join(root_dir, 'steps.yaml'),
-    'status': os.path.join(root_dir, 'status.yaml'),
-    'docker-compose': os.path.join(root_dir, 'docker-compose.yaml')
-  }
 
 def get_steps_content(confirm_steps_path):
   return {
@@ -120,7 +112,7 @@ def get_steps_content(confirm_steps_path):
       'dependencies': ['verify_data_status']
     }, {
       'name': 'mark_verified_in_borg',
-      'description': 'Mark the verified parts in borg as being verified',
+      'description': 'Mark the verified parts in borg',
       'command': 'mark_verified_in_borg',
       'dependencies': ['verify_data_status']
     }, {
@@ -146,9 +138,13 @@ def get_compose_content(vars):
           '/data/backup/enc:/backup/enc',
           '/data/backup/var:/backup/var',
           '/data/backup/.config:/backup/.config:ro',
-          '/data/backup/logs:/backup/logs',
-          '/data/backup/ready:/backup/ready',
-          '/data/backup/public:/backup/public',
+
+          '/var/run/docker.sock:/var/run/docker.sock',
+          '/usr/bin/docker:/usr/bin/docker',
+          '/usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/libltdl.so.7',
+          #TODO just for testing
+          #'/home/slava/projects/backup-proof/python_backup_proof:/python_backup_proof',
+
         ],
         'image': BACKUP_PROOF_IMAGE,
         'restart': 'unless-stopped',

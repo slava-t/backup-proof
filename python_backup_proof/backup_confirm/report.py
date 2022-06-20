@@ -4,8 +4,8 @@ import traceback
 
 from backup_confirm.logger import get_logger
 from backup_confirm.process import ENC_PROCESS_DIR
-from backup_confirm.step import split_stepname, format_step_id
-from backup_confirm.utils import get_yaml
+from backup_confirm.step import format_step_id
+from backup_confirm.utils import get_yaml, split_stepname
 
 logger = get_logger('report')
 

@@ -2,11 +2,15 @@ import os
 import sys
 import traceback
 
-from backup_confirm.step import step_success, step_failed, verify_dependencies
+from backup_confirm.step import (
+  get_step_info,
+  step_success,
+  step_failed,
+  verify_dependencies
+)
 from backup_confirm.utils import (
-  read_from_yaml_file,
-  write_to_yaml_file,
-  is_path_short
+  is_path_short,
+  write_to_yaml_file
 )
 from backup_confirm.logger import get_logger
 
@@ -36,11 +40,11 @@ def set_verified_status(ctx, status_file, fail_reason = None):
 def run_verify_preceeding_steps(ctx, params):
   status_file = None
   try:
-    step_data = read_from_yaml_file(ctx['step'])
+    step_info = get_step_info(ctx)
     status_file = params.get('status')
     if status_file and not is_path_short(status_file):
       return step_failed(ctx, 'Invalid file name \'{}\''.format(status_file))
-    fail_reason = verify_dependencies(ctx, step_data['id'])
+    fail_reason = verify_dependencies(ctx, step_info['id'])
     set_verified_status(ctx, status_file, fail_reason)
     if fail_reason is not None:
       logger.info('Failed reason: {}'.format(fail_reason))

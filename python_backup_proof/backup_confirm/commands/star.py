@@ -26,7 +26,6 @@ def split_steps(steps, steps_after):
     all_steps[star_index+1:]
   )
 
-
 def run_star_command(ctx, params):
   logger.info('Runnin star command {}'.format(params))
   steps_after = params.get('steps') or []

@@ -15,6 +15,9 @@ from backup_confirm.commands.release import run_release
 from backup_confirm.commands.verify_backup_log import run_verify_backup_log
 from backup_confirm.commands.verify_borg_log import run_verify_borg_log
 from backup_confirm.commands.verify_log_is_empty import run_verify_log_is_empty
+from backup_confirm.commands.verify_mysql_db_restore import (
+  run_verify_mysql_db_restore
+)
 from backup_confirm.commands.verify_part_min_size import (
   run_verify_part_min_size
 )
@@ -43,6 +46,7 @@ commands = {
   'verify_log_is_empty': run_verify_log_is_empty,
   'verify_preceeding_steps': run_verify_preceeding_steps,
   'verify_sql_file_sha1sum': run_verify_sql_file_sha1sum,
+  'verify_mysql_db_restore': run_verify_mysql_db_restore,
   'check_borg_data': run_check_borg_data,
   'mark_verified_in_borg': run_mark_verified_in_borg,
   'clean_borg_repo': run_clean_borg_repo,

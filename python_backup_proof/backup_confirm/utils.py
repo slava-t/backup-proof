@@ -15,6 +15,8 @@ FID_REGEX=re.compile('^[0-9]{8}-[0-9]{6}-[0-9]{9}$')
 PACK_SUFFIX_REGEX = re.compile('^([0-9]{8}-[0-9]{6}-[0-9]{9})[.]\\S*$')
 NAME_REGEX=re.compile('^[a-z](_?[a-z0-9]+)*$')
 SPACE_SIZE_REGEX = re.compile('^\\s*([0-9]+)\\s*([kKmMgGTt])?\\s*$')
+STEP_ID_RE = re.compile('^[0-9]{4}$')
+STEP_ID_LEN = 4
 
 size_multipliers = {
   'k': 1000,
@@ -28,6 +30,9 @@ size_multipliers = {
 }
 
 logger = get_logger('utils')
+
+def format_step_id(id):
+  return str(id).rjust(STEP_ID_LEN, '0')
 
 def is_fid(fid):
   return FID_REGEX.match(fid) is not None
@@ -90,6 +95,26 @@ def parse_process_name(name):
     if parsed is not None:
       parsed['orig'] = name
       return parsed
+
+def split_stepname(stepname, throw = True):
+  stepname_parts = stepname.split('-')
+  if len(stepname_parts) < 2:
+    if throw:
+      raise Exception(
+        'Step name \'{}\' does not consist of at least two parts'.format(stepname)
+      )
+    return (None, None)
+  id = stepname_parts[0]
+  if not STEP_ID_RE.match(id):
+    if throw:
+      raise Exception((
+        'Invalid id \'{}\' in the step name \'{}\''.format(
+          id,
+          stepname
+        )
+      ))
+    return (None, None)
+  return (int(id), '-'.join(stepname_parts[1:]))
 
 def parse_packed_part_name(name):
   components = name.split('-')
