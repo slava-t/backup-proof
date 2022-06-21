@@ -55,7 +55,7 @@ def wait_for_success(
     service,
     command,
     timeInSeconds=300,
-    intervalInSeconds=2
+    intervalInSeconds=5
 ):
   try:
    start = datetime.now(timezone.utc)
@@ -67,6 +67,9 @@ def wait_for_success(
      time.sleep(intervalInSeconds)
      result, _, stderr = exec_in_cluster(ctx, service, command)
      if result == 0:
+       logger.info('Waiting for success in \'{}\' succeeded'.format(
+         ctx['main_dir']
+       ))
        return True
      logger.info('Executing command {} in cluster \'{}\' failed: {}'.format(
        command,
@@ -75,6 +78,9 @@ def wait_for_success(
      ))
      now = datetime.now(timezone.utc)
      if (now - start).total_seconds() > timeInSeconds:
+       logger.info('Waiting for success in \'{}\' timed out'.format(
+         ctx['main_dir']
+       ))
        return False
      logger.info('Waiting longer for service \'{}\' in \'{}\''.format(
        service,
