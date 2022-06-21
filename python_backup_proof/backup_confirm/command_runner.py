@@ -21,6 +21,9 @@ from backup_confirm.commands.verify_mysql_db_restore import (
 from backup_confirm.commands.verify_part_min_size import (
   run_verify_part_min_size
 )
+from backup_confirm.commands.verify_postgres_db_restore import (
+  run_verify_postgres_db_restore
+)
 from backup_confirm.commands.verify_preceeding_steps import (
   run_verify_preceeding_steps
 )
@@ -47,6 +50,7 @@ commands = {
   'verify_preceeding_steps': run_verify_preceeding_steps,
   'verify_sql_file_sha1sum': run_verify_sql_file_sha1sum,
   'verify_mysql_db_restore': run_verify_mysql_db_restore,
+  'verify_postgres_db_restore': run_verify_postgres_db_restore,
   'check_borg_data': run_check_borg_data,
   'mark_verified_in_borg': run_mark_verified_in_borg,
   'clean_borg_repo': run_clean_borg_repo,

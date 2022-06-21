@@ -143,7 +143,7 @@ def get_compose_content(vars):
           '/usr/bin/docker:/usr/bin/docker',
           '/usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/libltdl.so.7',
           #TODO just for testing
-          #'/home/slava/projects/backup-proof/python_backup_proof:/python_backup_proof',
+          '/home/slava/projects/backup-proof/python_backup_proof:/python_backup_proof',
 
         ],
         'image': BACKUP_PROOF_IMAGE,

@@ -119,6 +119,7 @@ def run_verify_mysql_db_restore(ctx, params):
       ctx['step'],
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
+    return step_failed(ctx)
   finally:
     destroy_cluster(cluster_ctx)
 

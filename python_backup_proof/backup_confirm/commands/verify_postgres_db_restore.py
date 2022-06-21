@@ -1,6 +1,7 @@
 import os
 import sys
 import traceback
+import re
 
 from backup_confirm.cluster import (
   create_step_cluster,
@@ -19,7 +20,36 @@ from backup_confirm.step import (
 
 from backup_confirm.utils import is_path_short, is_path_safe
 
-logger = get_logger('verify_mysql_db_restore')
+NOTICE_DROP_ROLE_OR_DB_RE = re.compile(
+  '^NOTICE:\s+(database|role)\s+.*does not exist, skipping$'
+)
+
+ERROR_POSTGRES_USER_EXISTS_RE = re.compile(
+  '^ERROR:  role "postgres" already exists$'
+)
+
+ERROR_CURRENT_USER_CANNOT_DROP_RE = re.compile(
+  '^ERROR:  current user cannot be dropped$'
+)
+
+logger = get_logger('verify_postgres_db_restore')
+
+ignore_from_stderr = [
+  NOTICE_DROP_ROLE_OR_DB_RE,
+  ERROR_CURRENT_USER_CANNOT_DROP_RE,
+  ERROR_POSTGRES_USER_EXISTS_RE
+]
+
+def log_has_error(log):
+  lines = [x for x in [y.strip() for y in log.split('\n')] if x != '']
+  for line in lines:
+    matched = [x for x in ignore_from_stderr if x.match(line)]
+    if len(matched) == 0:
+      logger.info('The line in the log that is not allowed: \'{}\''.format(
+        line
+      ))
+      return True
+  return False
 
 def run_verify_postgres_db_restore(ctx, params):
   cluster_ctx = None
@@ -40,16 +70,10 @@ def run_verify_postgres_db_restore(ctx, params):
     sql_path = os.path.join('/parts', part, file)
     services = {
       'postgres': {
-        'image': 'mysql:5.7',
-        'resources': [
-          {
-            'id': 'mysql-big-packet-confd',
-            'path': '/etc/mysql/conf.d'
-          }
-        ],
-        'dirs': ['/var/lib/mysql'],
+        'image': 'postgres:12',
+        'dirs': ['/var/lib/postgresql/data'],
         'environment': {
-          'MYSQL_ROOT_PASSWORD': 'abc123'
+          'POSTGRES_PASSWORD': 'abc123'
       }
     }}
     cluster_ctx = create_step_cluster(ctx, services)
@@ -63,13 +87,13 @@ def run_verify_postgres_db_restore(ctx, params):
       '-c',
       (
         'echo "SELECT 1;" | '
-        'MYSQL_PWD=abc123 /usr/bin/mysql -u root'
+        '/sbin/runuser -u postgres /usr/bin/psql'
       )
     ]
-    if not wait_for_success(cluster_ctx, 'mysql', command):
+    if not wait_for_success(cluster_ctx, 'postgres', command):
       return step_failed(
         ctx,
-        'Waiting for mysql to be ready failed for \'{}\''.format(
+        'Waiting for postgres to be ready failed for \'{}\''.format(
           ctx['step_dir']
         )
       )
@@ -78,25 +102,28 @@ def run_verify_postgres_db_restore(ctx, params):
       '/bin/bash',
       '-c',
       (
-        'cat "{}" | MYSQL_PWD=abc123 /usr/bin/mysql -u root'
+        'cat "{}" | /sbin/runuser -u postgres /usr/bin/psql'
       ).format(sql_path)
     ]
-    return_code, _, stderr = exec_in_cluster(cluster_ctx, 'mysql', command)
-    if return_code != 0 or stderr.strip() != '':
+    return_code, _, stderr = exec_in_cluster(cluster_ctx, 'postgres', command)
+    if return_code != 0 or log_has_error(stderr):
       return step_failed(
         ctx,
-        'Restoring database failed. Retcode: {}. Error: \'{}\''.format(
+        'Restoring database failed. Retcode: {}. Error log:\n\'{}\'\n'.format(
           return_code,
-          stderr.strip()
+          stderr
         )
       )
     return step_success(ctx)
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    logger.error('Verifying mysql db restore failed \'{}\' failed: {}'.format(
-      ctx['step'],
-      ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-    ))
+    logger.error(
+      'Verifying postgres db restore failed \'{}\' failed: {}'.format(
+        ctx['step'],
+        ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+      )
+    )
+    return step_failed(ctx)
   finally:
     destroy_cluster(cluster_ctx)
 
