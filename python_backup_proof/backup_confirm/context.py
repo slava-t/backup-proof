@@ -62,6 +62,7 @@ def get_step_cluster_context(ctx, root_dir = CLUSTER_DIR):
     'name': name,
     'main_dir': main_dir,
     'dirs_dir': os.path.join(main_dir, 'dirs'),
+    'resources_dir': os.path.join(main_dir, 'resources'),
     'step_id': step_id,
     'process': process_descriptor,
     'docker-compose': dc_path

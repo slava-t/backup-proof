@@ -21,7 +21,7 @@ from backup_confirm.utils import is_path_short, is_path_safe
 
 logger = get_logger('verify_mysql_db_restore')
 
-def run_verify_mysql_db_restore(ctx, params):
+def run_verify_postgres_db_restore(ctx, params):
   cluster_ctx = None
   try:
     part = params.get('part')
@@ -34,17 +34,12 @@ def run_verify_mysql_db_restore(ctx, params):
       return step_failed(ctx, 'Invalid part \'{}\''.format(part))
     if not is_path_safe(file):
       return step_failed(ctx, 'Invlaid file \'{}\''.format(file))
-    db = params.get('db')
-    if db is None:
-      return step_failed(ctx, 'Missing \'db\' entry in params')
-    if not is_path_short(db):
-      return step_failed(ctx, 'Invalid db \'{}\''.format(db))
     step_info = get_step_info(ctx)
     if step_info is None:
       raise Exception('Could not get info for the current step')
     sql_path = os.path.join('/parts', part, file)
     services = {
-      'mysql': {
+      'postgres': {
         'image': 'mysql:5.7',
         'resources': [
           {
@@ -83,25 +78,8 @@ def run_verify_mysql_db_restore(ctx, params):
       '/bin/bash',
       '-c',
       (
-        'echo "drop database if exists {}; create database {};" | '
-        'MYSQL_PWD=abc123 /usr/bin/mysql -u root'
-      ).format(db, db)
-    ]
-    return_code, _, stderr = exec_in_cluster(cluster_ctx, 'mysql', command)
-    if return_code != 0 or stderr.strip() != '':
-      return step_failed(
-        ctx,
-        'Database creation failed. Retcode: {}. Error: \'{}\''.format(
-          return_code,
-          stderr.strip()
-        )
-      )
-    command = [
-      '/bin/bash',
-      '-c',
-      (
-        'cat "{}" | MYSQL_PWD=abc123 /usr/bin/mysql -u root -D "{}"'
-      ).format(sql_path, db)
+        'cat "{}" | MYSQL_PWD=abc123 /usr/bin/mysql -u root'
+      ).format(sql_path)
     ]
     return_code, _, stderr = exec_in_cluster(cluster_ctx, 'mysql', command)
     if return_code != 0 or stderr.strip() != '':

@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import yaml
 import os
 import shutil
 import subprocess
@@ -40,7 +41,8 @@ def destroy_cluster(ctx):
         check=False
       )
     logger.info('Removing cluster directory \'{}\''.format(main_dir))
-    shutil.rmtree(main_dir)
+    #TODO for testing
+    #shutil.rmtree(main_dir)
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     logger.error('Destroying cluster \'{}\' failed: {}'.format(
@@ -52,27 +54,36 @@ def wait_for_success(
     ctx,
     service,
     command,
-    timeInSeconds=30,
+    timeInSeconds=300,
     intervalInSeconds=2
 ):
   try:
    start = datetime.now(timezone.utc)
+   logger.info('Waiting for success running command {} in \'{}\''.format(
+     command,
+     ctx['main_dir']
+   ))
    while True:
      time.sleep(intervalInSeconds)
-     result, _, _ = exec_in_cluster(ctx, service, command)
+     result, _, stderr = exec_in_cluster(ctx, service, command)
      if result == 0:
        return True
+     logger.info('Executing command {} in cluster \'{}\' failed: {}'.format(
+       command,
+       ctx['main_dir'],
+       str(stderr).strip()
+     ))
      now = datetime.now(timezone.utc)
      if (now - start).total_seconds() > timeInSeconds:
        return False
-     logger.info('Waiting more for service \'{}\' in \'{}\''.format(
+     logger.info('Waiting longer for service \'{}\' in \'{}\''.format(
        service,
        ctx['main_dir']
      ))
 
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    logger.error('Waiting for success failed for \'{}\' failed: {}'.format(
+    logger.error('Waiting for success failed for \'{}\': {}'.format(
       ctx.get('main_dir'),
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
@@ -98,10 +109,14 @@ def create_step_cluster(step_ctx, services):
   try:
     cluster_ctx = get_step_cluster_context(step_ctx)
     host_cluster_ctx = get_host_step_cluster_context(step_ctx)
+    resources_dir = cluster_ctx['resources_dir']
+    host_resources_dir = host_cluster_ctx['resources_dir']
+
     step_host_ctx = step_to_host_context(step_ctx)
     dirs_dir = cluster_ctx.get('dirs_dir')
     logger.info('Creating all dirs for \'{}\''.format(dirs_dir))
     os.makedirs(cluster_ctx['dirs_dir'], mode=0o660, exist_ok=True)
+    os.makedirs(resources_dir, mode=0o660, exist_ok=True)
     docker_compose_path = cluster_ctx.get('docker-compose')
     dc_services = {}
     for name, service in services.items():
@@ -123,7 +138,33 @@ def create_step_cluster(step_ctx, services):
         dirname = get_dirname(dir_id, dir_path)
         dir_cluster_path = os.path.join(host_cluster_ctx['dirs_dir'], dirname)
         dc_volumes.append('{}:{}'.format(dir_cluster_path, dir_path))
-
+      resources = service.get('resources') or []
+      src_resources_dir = os.path.join(
+        os.path.split(__file__)[0],
+        'cluster-resources'
+      )
+      for resource in resources:
+        resource_id = resource.get('id')
+        dest_path = resource.get('path')
+        if resource_id is None:
+          raise Exception('Missing resource_id: {}'.format(resource))
+        if dest_path is None:
+          raise Exception('Missing path in resource: {}'.format(resource))
+        src_resource_dir = os.path.join(src_resources_dir, resource_id)
+        if not os.path.isdir(src_resource_dir):
+          raise Exception('Could not find resource \'{}\''.format(
+            src_resource_dir
+          ))
+        dest_resource_dir = os.path.join(
+          resources_dir,
+          resource_id
+        )
+        host_dest_resource_dir = os.path.join(
+          host_resources_dir,
+          resource_id
+        )
+        shutil.copytree(src_resource_dir, dest_resource_dir)
+        dc_volumes.append('{}:{}:ro'.format(host_dest_resource_dir, dest_path))
       dc_service['volumes'] = dc_volumes
       dc_services[name] = dc_service
     dc_content = {
@@ -136,8 +177,9 @@ def create_step_cluster(step_ctx, services):
         }
       }
     }
-    logger.info('Writting docker-compose content to \'{}\''.format(
-      docker_compose_path
+    logger.info('Writting docker-compose content to \'{}\': \n{}\n'.format(
+      docker_compose_path,
+      yaml.dump(dc_content, default_flow_style=False)
     ))
     write_to_yaml_file(dc_content, docker_compose_path)
     subprocess.run(
