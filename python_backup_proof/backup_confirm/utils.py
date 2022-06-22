@@ -165,10 +165,13 @@ def get_yaml(yaml_path, default_value = None):
   try:
     return read_from_yaml_file(yaml_path)
   except:
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    logger.error('Getting yaml error: {}'.format(''.join(
-      traceback.format_exception(exc_type, exc_value, exc_traceback)
-    )))
+    exc_type, exc_value, _ = sys.exc_info()
+    logger.info(
+      (
+        'Getting yaml \'{}\' failed({}): {}. '
+        'Returning default value {}'
+      ).format(yaml_path,exc_type, exc_value, default_value)
+    )
   return default_value
 
 

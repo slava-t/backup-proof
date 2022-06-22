@@ -27,8 +27,8 @@ from backup_confirm.utils import (
   write_to_yaml_file
 )
 #TODO for testing
-#SCAN_AND_COMPLETE_INTERVAL = 120 #2 minutes
-SCAN_AND_COMPLETE_INTERVAL = 1 #2 minutes
+SCAN_AND_COMPLETE_INTERVAL = 120 #2 minutes
+#SCAN_AND_COMPLETE_INTERVAL = 1 #2 minutes
 
 DONE_PREFIX = 'done-'
 MAX_PROCESS_AGE = 24 * 3600 #24 hours

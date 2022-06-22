@@ -25,6 +25,7 @@ def get_process_context(root_dir):
     'parts': os.path.join(root_dir, 'parts.yaml'),
     'steps': os.path.join(root_dir, 'steps.yaml'),
     'status': os.path.join(root_dir, 'status.yaml'),
+    'options': os.path.join(root_dir, 'options.yaml'),
     'docker-compose': os.path.join(root_dir, 'docker-compose.yaml')
   }
 

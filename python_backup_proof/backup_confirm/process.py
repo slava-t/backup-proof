@@ -85,10 +85,15 @@ def get_steps_content(confirm_steps_path):
         'path': confirm_steps_path
       },
       'dependencies': ['create_confirm_steps_yaml']
-#    }, {
-#      'name': 'check_borg_data',
-#      'description': 'Run \'borg check\' for borg repo integrity',
-#      'command': 'check_borg_data'
+    }, {
+      'name': 'check_borg_data',
+      'description': 'Run \'borg check\' for borg repo integrity',
+      'command': 'check_borg_data',
+      'options': [{
+        'name': 'check_borg_data',
+        'default': True,
+        'param': 'enable'
+      }]
     }, {
       'name': 'verify_data_status',
       'description': 'Verify data status based on previous steps',
@@ -96,20 +101,30 @@ def get_steps_content(confirm_steps_path):
       'params': {
         'status': 'data_status.yaml'
       }
-#    }, {
-#      'name': 'publish',
-#      'description': (
-#        'Make the parts available for downloading'
-#      ),
-#      'command': 'publish',
-#      'dependencies': ['verify_data_status']
-#    }, {
-#      'name': 'release',
-#      'description': (
-#        'Make the parts available for restoring'
-#      ),
-#      'command': 'release',
-#      'dependencies': ['verify_data_status']
+    }, {
+      'name': 'publish',
+      'description': (
+        'Make the parts available for downloading'
+      ),
+      'command': 'publish',
+      'options': [{
+        'name': 'publish',
+        'default': True,
+        'param': 'enable'
+      }],
+      'dependencies': ['verify_data_status']
+    }, {
+      'name': 'release',
+      'description': (
+        'Make the parts available for restoring'
+      ),
+      'options': [{
+        'name': 'release',
+        'param': 'enable',
+        'default': True
+      }],
+      'command': 'release',
+      'dependencies': ['verify_data_status']
     }, {
       'name': 'mark_verified_in_borg',
       'description': 'Mark the verified parts in borg',
@@ -120,11 +135,16 @@ def get_steps_content(confirm_steps_path):
       'description': 'Removing old archives from borg repo',
       'command': 'clean_borg_repo'
     }, {
-      'name': 'check_after_cleaning',
+      'name': 'check_borg_repo',
       'description': (
         'Run \'borg check\' for borg repo integrity after repo cleaning'
       ),
-      'command': 'check_borg_data'
+      'command': 'check_borg_data',
+      'options': [{
+        'name': 'check_borg_repo',
+        'default': True,
+        'param': 'enable'
+      }]
     }]
   }
 
@@ -143,7 +163,7 @@ def get_compose_content(vars):
           '/usr/bin/docker:/usr/bin/docker',
           '/usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/libltdl.so.7',
           #TODO just for testing
-          '/home/slava/projects/backup-proof/python_backup_proof:/python_backup_proof',
+          #'/home/slava/projects/backup-proof/python_backup_proof:/python_backup_proof',
 
         ],
         'image': BACKUP_PROOF_IMAGE,
@@ -199,6 +219,7 @@ def create_process(repo_name, repo, prod_env_id, parts):
   os.mkdir(process_tmp_path, 0o600)
   os.mkdir(tmp_ctx['parts_dir'], 0x600)
   os.mkdir(tmp_ctx['steps_dir'], 0o600)
+  write_to_yaml_file({}, tmp_ctx['options'])
   parts_content = {
     'zone': zone,
     'timestamp_id': id,
