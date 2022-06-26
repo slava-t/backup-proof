@@ -19,9 +19,16 @@ from backup_confirm.commands.verify_log_is_empty import run_verify_log_is_empty
 from backup_confirm.commands.verify_mysql_db_restore import (
   run_verify_mysql_db_restore
 )
+from backup_confirm.commands.verify_mysqldump_completed import (
+  run_verify_mysqldump_completed
+)
 from backup_confirm.commands.verify_part_min_size import (
   run_verify_part_min_size
 )
+from backup_confirm.commands.verify_pg_dumpall_completed import(
+  run_verify_pg_dumpall_completed
+)
+
 from backup_confirm.commands.verify_postgres_db_restore import (
   run_verify_postgres_db_restore
 )
@@ -63,7 +70,9 @@ commands = {
   'clean_borg_repo': run_clean_borg_repo,
   'publish': run_publish,
   'release': run_release,
-  'set_options': run_set_options
+  'set_options': run_set_options,
+  'verify_mysqldump_completed': run_verify_mysqldump_completed,
+  'verify_pg_dumpall_completed': run_verify_pg_dumpall_completed
 }
 
 def get_command_runner(command):
