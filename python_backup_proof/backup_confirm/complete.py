@@ -354,10 +354,11 @@ def main():
     try:
       if count % SCAN_AND_COMPLETE_INTERVAL == 0:
         scan_and_complete()
-      if count % ZPOOL_CHECK_INTERVAL == 0:
-        check_zpool_status()
-      if count % MOUNT_ENC_DETECTION_INTERVAL == 0:
-        check_enc_mount_status()
+      #TODO for testing
+#      if count % ZPOOL_CHECK_INTERVAL == 0:
+#        check_zpool_status()
+#      if count % MOUNT_ENC_DETECTION_INTERVAL == 0:
+#        check_enc_mount_status()
       count += 1
       if count == 10**9:
         count = 1
