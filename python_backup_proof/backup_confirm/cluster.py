@@ -41,8 +41,7 @@ def destroy_cluster(ctx):
         check=False
       )
     logger.info('Removing cluster directory \'{}\''.format(main_dir))
-    #TODO for testing
-    #shutil.rmtree(main_dir)
+    shutil.rmtree(main_dir)
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     logger.error('Destroying cluster \'{}\' failed: {}'.format(
