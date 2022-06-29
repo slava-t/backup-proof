@@ -11,7 +11,6 @@ LOG_DIR = '/backup/var/logs'
 CONFIRM_LOG_PATH = os.path.join(LOG_DIR, 'backup-confirm.log')
 COMPLETE_LOG_PATH = os.path.join(LOG_DIR, 'backup-complete.log')
 ZPOOL_STATUS_PATH = '/backup/var/zpool_status'
-MOUNT_ENC_DETECTION_DIR = '/enc/backup'
 
 HOST_ENC_PROCESS_DIR = '/data/confirm/enc/process'
 HOST_CLUSTER_DIR = '/data/confirm/enc/cluster'

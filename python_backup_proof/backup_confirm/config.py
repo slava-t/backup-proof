@@ -13,11 +13,18 @@ def get_enc_config():
     enc_config = get_yaml(ENC_CONFIG_PATH)
   return enc_config
 
+def reset_enc_config():
+  global enc_config
+  enc_config = None
+
 def get_config():
   global config
   if config is None:
     config = get_yaml(CONFIG_PATH)
   return config
 
+def reset_config():
+  global config
+  config = None
 
 

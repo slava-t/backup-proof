@@ -10,13 +10,12 @@ import traceback
 
 from backup_confirm.logger import get_logger
 from backup_confirm.notification import notify_report, notify
-from backup_confirm.config import get_config
+from backup_confirm.config import get_config, reset_config
 from backup_confirm.paths import (
   ENC_PROCESS_DIR,
   VERIFIED_DIR,
   FAILED_DIR,
-  ZPOOL_STATUS_PATH,
-  MOUNT_ENC_DETECTION_DIR
+  ZPOOL_STATUS_PATH
 )
 
 from backup_confirm.report import create_process_report, add_complete_step
@@ -33,9 +32,9 @@ SCAN_AND_COMPLETE_INTERVAL = 120 #2 minutes
 DONE_PREFIX = 'done-'
 MAX_PROCESS_AGE = 24 * 3600 #24 hours
 
-ZPOOL_CHECK_INTERVAL = 3600 #1 hour
-MAX_ZPOOL_STATUS_AGE = 3600 #30 minutes
-MOUNT_ENC_DETECTION_INTERVAL = 3600 #1 hour
+ZPOOL_CHECK_INTERVAL = 900 #15 minutes
+MAX_ZPOOL_STATUS_AGE = 3600 * 2 #2 hours
+MOUNT_ENC_DETECTION_INTERVAL = 900 #15 minutes
 
 KEEP_VERIFIED = 2 #30
 KEEP_FAILED = 2 #10
@@ -226,6 +225,7 @@ def prune_done_markers(names, process_descriptor):
 
 def scan_and_complete():
   try:
+    reset_config()
     now = datetime.now(timezone.utc)
     all_process_names = os.listdir(ENC_PROCESS_DIR)
     done = set([
@@ -314,17 +314,27 @@ def check_zpool_status():
 
 def check_enc_mount_status():
   config = get_config() or {}
+  paths = config.get('enc_mount_status_paths') or []
   handle = config.get('enc_mount_status_handle')
   failure_data = {
     'success': False,
-    'title': 'Backup enc mount status failure(\'{}\')'.format(handle),
+    'title': 'Backup mounts status failure(\'{}\')'.format(handle),
   }
   try:
-    if not os.path.isdir(MOUNT_ENC_DETECTION_DIR):
+    if len(paths) < 1:
       failure_data['text'] = (
-        'Cannot access \'{}\'. '
-        'Probably there is a need for a manual mounting after rebooting'
-      ).format(MOUNT_ENC_DETECTION_DIR)
+        'No mount check paths has been detected in the configuration'
+      )
+    else:
+      lines = []
+      for mount_check_path in paths:
+        if not os.path.exists(mount_check_path):
+          lines.append('   {}'.format(mount_check_path))
+      if len(lines) > 0:
+        failure_data['text'] = 'The following paths do not exist:\n{}'.format(
+          '\n'.join(lines)
+        )
+
     if failure_data.get('text') is None:
       logger.info('Sending success enc mount notification for \'{}\''.format(
         handle
@@ -354,11 +364,10 @@ def main():
     try:
       if count % SCAN_AND_COMPLETE_INTERVAL == 0:
         scan_and_complete()
-      #TODO for testing
-#      if count % ZPOOL_CHECK_INTERVAL == 0:
-#        check_zpool_status()
-#      if count % MOUNT_ENC_DETECTION_INTERVAL == 0:
-#        check_enc_mount_status()
+      if count % ZPOOL_CHECK_INTERVAL == 0:
+        check_zpool_status()
+      if count % MOUNT_ENC_DETECTION_INTERVAL == 0:
+        check_enc_mount_status()
       count += 1
       if count == 10**9:
         count = 1

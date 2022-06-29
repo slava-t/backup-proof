@@ -3,13 +3,15 @@ import time
 import traceback
 
 from backup_confirm.borg import get_latest_parts, get_borg_credentials
-from backup_confirm.config import get_enc_config
+from backup_confirm.config import get_enc_config, reset_enc_config
 from backup_confirm.logger import get_logger
 from backup_confirm.process import create_processes
 
 #TODO for testing
 SCAN_AND_PROCESS_INTERVAL = 180 #3 minutes interval
 #SCAN_AND_PROCESS_INTERVAL = 1 #3 minutes interval
+
+RESET_ENC_CONFIG_INTERVAL = 300 #5 minutes interval
 
 ARCHIVE_MAX_AGE = 12 * 3600 #12 hours
 
@@ -46,6 +48,7 @@ def process_product(repo_name, repo, product_name, environment_id):
 
 def scan_and_process():
   try:
+    reset_enc_config()
     enc_config = get_enc_config()
     repos = enc_config.get('repos') or {}
     for repo_name, repo in repos.items():
@@ -64,7 +67,6 @@ def scan_and_process():
     logger.error('Error in confirm scan_and_process function: {}'.format(
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
-
 
 
 def main():
