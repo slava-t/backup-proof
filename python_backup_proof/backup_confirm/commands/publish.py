@@ -9,7 +9,7 @@ logger = get_logger('publish command')
 
 def run_publish(ctx, _):
   logger.info('Publishing to directory \'{}\''.format(PUBLISH_DIR))
-  pack_parts(ctx, PUBLISH_DIR, gz=True)
+  pack_parts(ctx, PUBLISH_DIR, compression=1)
   logger.info('Prunning published packs in \'{}\''.format(PUBLISH_DIR))
   prune_parts(PUBLISH_DIR, keep=PACKS_TO_KEEP)
   step_success(ctx)

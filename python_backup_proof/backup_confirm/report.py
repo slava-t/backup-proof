@@ -156,3 +156,29 @@ def create_text_report(outcome):
 
   return lines
 
+def create_zpool_status_failures_report(zpool_status):
+  failed_lines = [x for x in zpool_status.items() if (
+    x[1]['status'] != 'ONLINE' or
+    x[1]['read'] > 0 or
+    x[1]['write'] > 0 or
+    x[1]['cksum'] > 0
+  )]
+  if len(failed_lines) > 0:
+    lines = ['', 'ZPOOL STATUS FAILURES REPORT', '']
+    f = '{:<30}{:<12}{:>8}{:>8}{:>8}'
+    header = f.format('NAME', 'STATUS', 'READ', 'WRITE', 'CKSUM')
+    separator = '-' * len(header)
+    lines.append(header)
+    lines.append(separator)
+    for name, line in failed_lines:
+      lines.append(f.format(
+        name,
+        line['status'],
+        line['read'],
+        line['write'],
+        line['cksum']
+      ))
+    lines.append(separator)
+    lines.append('')
+    return '\n'.join(lines)
+

@@ -18,10 +18,15 @@ from backup_confirm.paths import (
   ZPOOL_STATUS_PATH
 )
 
-from backup_confirm.report import create_process_report, add_complete_step
+from backup_confirm.report import (
+  create_process_report,
+  add_complete_step,
+  create_zpool_status_failures_report
+)
 from backup_confirm.utils import (
   is_fid,
   parse_process_name,
+  parse_zpool_status,
   read_from_yaml_file,
   write_to_yaml_file
 )
@@ -32,12 +37,16 @@ SCAN_AND_COMPLETE_INTERVAL = 120 #2 minutes
 DONE_PREFIX = 'done-'
 MAX_PROCESS_AGE = 24 * 3600 #24 hours
 
-ZPOOL_CHECK_INTERVAL = 900 #15 minutes
-MAX_ZPOOL_STATUS_AGE = 3600 * 2 #2 hours
-MOUNT_ENC_DETECTION_INTERVAL = 900 #15 minutes
+ZPOOL_CHECK_INTERVAL = 3600 #1 hour
+MAX_ZPOOL_STATUS_AGE = 3600 * 4 #4 hours
+MOUNT_DETECTION_INTERVAL = 3600 #1 hour
+
+DISK_USAGES_CHECK_INTERVAL = 3600 #1 hour
 
 KEEP_VERIFIED = 2 #30
 KEEP_FAILED = 2 #10
+
+DEFAULT_MAX_DISK_USAGE_RATE = 0.75
 
 logger = get_logger('complete')
 
@@ -248,15 +257,7 @@ def scan_and_complete():
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
 
-def read_zpool_status(status_path):
-  try:
-    with open(status_path, 'r', encoding='utf-8') as stream:
-      return stream.read()
-  except:
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    logger.error('Getting zpool status error: {}'.format(''.join(
-      traceback.format_exception(exc_type, exc_value, exc_traceback)
-    )))
+  
 
 def check_zpool_status():
   config = get_config() or {}
@@ -278,19 +279,12 @@ def check_zpool_status():
           ZPOOL_STATUS_PATH
         );
       else:
-        result = subprocess.run(
-          [
-            '/usr/local/bin/verify_zpool_status',
-            ZPOOL_STATUS_PATH,
-            str(expected_count)
-          ]
-        )
-        if result.returncode != 0:
-          zpool_status = read_zpool_status(ZPOOL_STATUS_PATH)
-          text = 'Verificaton of zpool status failed'
-          if zpool_status is not None:
-            text = zpool_status
-          failure_data['text'] = text
+        zpool_status = parse_zpool_status(ZPOOL_STATUS_PATH)
+        if zpool_status is None:
+          raise Exception('Could not get zpool status from \'{}\''.format(
+            ZPOOL_STATUS_PATH
+          ))
+        failure_data['text'] = create_zpool_status_failures_report(zpool_status)
     if failure_data.get('text') is None:
       logger.info('Sending success zpool status notification for \'{}\''.format(
         handle
@@ -312,10 +306,52 @@ def check_zpool_status():
   ))
   notify(handle, failure_data)
 
-def check_enc_mount_status():
+def check_disk_usages():
   config = get_config() or {}
-  paths = config.get('enc_mount_status_paths') or []
-  handle = config.get('enc_mount_status_handle')
+  handle = config.get('disk_usages_handle')
+  disk_usages = config.get('disk_usages') or []
+  failure_data = {
+    'success': False,
+    'title': 'Disk usage status failure(\'{}\')'.format(handle)
+  }
+  try:
+    lines = []
+    for disk_usage in disk_usages:
+      path = disk_usage.get('path')
+      if path is None:
+        logger.info('No path provided for a disk usage config')
+        lines.append('  Missing \'path\' config entry')
+      else:
+        max_rate = disk_usage.get('max_rate')
+        if max_rate is None:
+          max_rate = DEFAULT_MAX_DISK_USAGE_RATE
+        _, u, f = shutil.disk_usage(path)
+        rate = round(u / (u + f), 2)
+        if rate > max_rate:
+          lines.append('  Usage rate for \'{}\' is {}  which exceeds {}'.format(
+            path,
+            rate,
+            max_rate
+          ))
+    if len(lines) > 0:
+      failure_data['text'] = (
+        'The following disk usage failures occurred:\n{}'
+      ).format('\n'.join(lines))
+  except:
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    logger.error('Error in check_disk_usages function: {}'.format(
+      ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    ))
+    failure_data['text'] = 'An error occurred while checking disk usages'
+  logger.info('Sending disk usages failure notification for \'{}\''.format(
+    handle
+  ))
+  notify(handle, failure_data)
+
+def check_mount_status():
+  config = get_config() or {}
+  paths = config.get('mount_status_paths') or []
+  handle = config.get('mount_status_handle')
   failure_data = {
     'success': False,
     'title': 'Backup mounts status failure(\'{}\')'.format(handle),
@@ -347,7 +383,7 @@ def check_enc_mount_status():
       )
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    logger.error('Error in check_enc_mount_status function: {}'.format(
+    logger.error('Error in check_mount_status function: {}'.format(
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
     failure_data['text'] = 'An error occurred while checking the status'
@@ -366,8 +402,10 @@ def main():
         scan_and_complete()
       if count % ZPOOL_CHECK_INTERVAL == 0:
         check_zpool_status()
-      if count % MOUNT_ENC_DETECTION_INTERVAL == 0:
-        check_enc_mount_status()
+      if count % MOUNT_DETECTION_INTERVAL == 0:
+        check_mount_status()
+      if count % DISK_USAGES_CHECK_INTERVAL == 0:
+        check_disk_usages()
       count += 1
       if count == 10**9:
         count = 1

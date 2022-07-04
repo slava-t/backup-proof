@@ -17,6 +17,18 @@ NAME_REGEX=re.compile('^[a-z](_?[a-z0-9]+)*$')
 SPACE_SIZE_REGEX = re.compile('^\\s*([0-9]+)\\s*([kKmMgGTt])?\\s*$')
 STEP_ID_RE = re.compile('^[0-9]{4}$')
 STEP_ID_LEN = 4
+ZPOOL_NAME = '[a-zA-Z_][a-zA-Z0-9_-]*'
+ZPOOL_NUM = '[0-9]+'
+ZPOOL_STATUS = '[a-zA-Z]+'
+ZPOOL_STATUS_LINE_REGEX = re.compile(
+  '^(\\s+)({})\\s+({})\\s+({})\\s+({})\\s+({})\\s*$'.format(
+    ZPOOL_NAME,
+    ZPOOL_STATUS,
+    ZPOOL_NUM,
+    ZPOOL_NUM,
+    ZPOOL_NUM
+  )
+)
 
 size_multipliers = {
   'k': 1000,
@@ -170,10 +182,48 @@ def get_yaml(yaml_path, default_value = None):
       (
         'Getting yaml \'{}\' failed({}): {}. '
         'Returning default value {}'
-      ).format(yaml_path,exc_type, exc_value, default_value)
+      ).format(yaml_path, exc_type, exc_value, default_value)
     )
   return default_value
 
+def parse_zpool_status(status_path, default_value = None):
+  try:
+    status_text = ''
+    with open(status_path, 'r', encoding='utf-8') as file:
+      status_text = file.read()
+    lines = status_text.split('\n')
+    matches = {}
+    name_components = []
+    for line in lines:
+      match = ZPOOL_STATUS_LINE_REGEX.match(line)
+      if match is not None:
+        indent = len(match.group(1))
+        status = {
+          'name': match.group(2),
+          'status': match.group(3),
+          'read': int(match.group(4)),
+          'write': int(match.group(5)),
+          'cksum': int(match.group(6))
+        }
+        while (
+          len(name_components) > 0 and
+          indent <= name_components[-1]['indent']
+        ):
+          name_components = name_components[:-1]
+        name_components.append({
+          'name': status['name'],
+          'indent': indent
+        })
+        matches['.'.join([x['name'] for x in name_components])] = status
+    return matches
+  except:
+    exc_type, exc_value, _ = sys.exc_info()
+    msg = (
+        'Getting zpool status from \'{}\' failed({}): {}. '
+        'Returning default value {}'
+      ).format(status_path, exc_type, exc_value, default_value)
+    logger.info(msg)
+  return default_value
 
 def split_prod_env_id(prod_env_id):
   id_parts = prod_env_id.split('-')

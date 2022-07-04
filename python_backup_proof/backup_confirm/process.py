@@ -282,7 +282,6 @@ def create_processes(repo_name, repo, confirm_parts):
     create_process(repo_name, repo, prod_env_id, parts)
 
 def process_step(ctx, stepname):
-  logger.info('Processing step \'{}\''.format(stepname))
   ctx = get_step_context(ctx, stepname)
   try:
     status_content = read_from_yaml_file(ctx['step_status'])
@@ -290,6 +289,10 @@ def process_step(ctx, stepname):
     if status in ['run', 'running']:
       return
     if status in {'success', 'failed', 'skipped'}:
+      logger.info('Step \'{}\' finished with status \'{}\''.format(
+        stepname,
+        status.uper()
+      ))
       return get_next_step(ctx, stepname)
 
     if status != 'start':
@@ -297,6 +300,7 @@ def process_step(ctx, stepname):
         stepname,
         status
       ))
+    logger.info('*** Processing step \'{}\' ***'.format(stepname))
     save_step_status(ctx, {
       'status': 'run'
     })

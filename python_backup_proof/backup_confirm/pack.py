@@ -29,13 +29,14 @@ def get_password(pack_pass, packname):
   )
   return clean_digest[0:24]
 
-def pack_dir(src_dir, dest_path, password, gz=False):
+def pack_dir(src_dir, dest_path, password, compression=0):
   logger.info('Packing dir \'{}\' to \'{}\''.format(src_dir, dest_path))
-  flags = '-c{}f'.format('z' if gz else '')
+  flags = '-cf'
   pack_command = (
-    '/bin/tar {} - * | /bin/gpg --batch -o "{}" -c -z 0'.format(
+    '/bin/tar {} - * | /bin/gpg --batch -o "{}" -c -z {}'.format(
       flags,
-      dest_path
+      dest_path,
+      compression
   ))
   pack_auth_command = '{} --passphrase "{}"'.format(pack_command, password)
   result = subprocess.run(
@@ -57,7 +58,7 @@ def pack_dir(src_dir, dest_path, password, gz=False):
       result.returncode
     ))
 
-def pack_parts(ctx, dest_dir, gz=False):
+def pack_parts(ctx, dest_dir, compression=0):
   config = get_enc_config()
   pack_pass = config.get('pack_pass')
   if type(pack_pass) is not str:
@@ -77,15 +78,14 @@ def pack_parts(ctx, dest_dir, gz=False):
   for part in parts:
     try:
       logger.info('Packing part \'{}\''.format(part))
-      packname = '{}-{}.tar{}.gpg'.format(
+      packname = '{}-{}.tar.gpg'.format(
         part,
-        CONFIRM_FID,
-        '.gz' if gz else ''
+        CONFIRM_FID
       )
       password = get_password(pack_pass, packname)
       src_dir = os.path.join(parts_dir, part)
       dest_path = os.path.join(env_dest_dir, packname)
-      pack_dir(src_dir, dest_path, password, gz)
+      pack_dir(src_dir, dest_path, password, compression)
     except:
       exc_type, exc_value, exc_traceback = sys.exc_info()
       logger.error('Packing part \'{}\' error: {}'.format(part, ''.join(
