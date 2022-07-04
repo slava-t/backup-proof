@@ -291,7 +291,7 @@ def process_step(ctx, stepname):
     if status in {'success', 'failed', 'skipped'}:
       logger.info('Step \'{}\' finished with status \'{}\''.format(
         stepname,
-        status.uper()
+        status.upper()
       ))
       return get_next_step(ctx, stepname)
 
