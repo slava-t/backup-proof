@@ -3,7 +3,6 @@ import os
 from backup_confirm.paths import (
   CLUSTER_DIR,
   HOST_CLUSTER_DIR,
-  ENC_PROCESS_DIR,
   HOST_ENC_PROCESS_DIR
 )
 from backup_confirm.utils import (

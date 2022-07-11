@@ -154,7 +154,7 @@ def get_compose_content(vars):
     'services': {
       'confirm': {
         'volumes':[
-          '/data/confirm/enc:/enc',
+          '/data/confirm:/data/confirm',
           '/data/backup/enc:/backup/enc',
           '/data/backup/var:/backup/var',
           '/data/backup/.config:/backup/.config:ro',
