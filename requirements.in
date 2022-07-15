@@ -6,4 +6,7 @@ pyyaml==5.4.1
 humanize==2.4.0
 python-dateutil==2.6.0
 urllib3==1.26.3
+fabric==2.7.0
+ansible==2.10.7
+
 

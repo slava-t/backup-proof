@@ -4,6 +4,10 @@
 #
 #    pip-compile
 #
+ansible-base==2.10.17
+    # via ansible
+ansible==2.10.7
+    # via -r requirements.in
 attrs==21.4.0
     # via jsonschema
 bcrypt==3.2.0
@@ -22,7 +26,9 @@ cffi==1.15.0
 charset-normalizer==2.0.12
     # via requests
 cryptography==36.0.2
-    # via paramiko
+    # via
+    #   ansible-base
+    #   paramiko
 cython==0.29.21
     # via -r requirements.in
 distro==1.7.0
@@ -35,18 +41,32 @@ dockerpty==0.4.1
     # via docker-compose
 docopt==0.6.2
     # via docker-compose
+fabric==2.7.0
+    # via -r requirements.in
 humanize==2.4.0
     # via -r requirements.in
 idna==3.3
     # via requests
 importlib-metadata==4.8.3
     # via jsonschema
+invoke==1.7.1
+    # via fabric
+jinja2==3.0.3
+    # via ansible-base
 jsonschema==3.2.0
     # via docker-compose
+markupsafe==2.0.1
+    # via jinja2
 packaging==21.3
-    # via borgbackup
+    # via
+    #   ansible-base
+    #   borgbackup
 paramiko==2.10.3
-    # via docker
+    # via
+    #   docker
+    #   fabric
+pathlib2==2.3.7.post1
+    # via fabric
 pycparser==2.21
     # via cffi
 pynacl==1.5.0
@@ -62,6 +82,7 @@ python-dotenv==0.20.0
 pyyaml==5.4.1
     # via
     #   -r requirements.in
+    #   ansible-base
     #   docker-compose
 requests==2.27.1
     # via
@@ -74,6 +95,7 @@ six==1.16.0
     #   dockerpty
     #   jsonschema
     #   paramiko
+    #   pathlib2
     #   python-dateutil
     #   websocket-client
 texttable==1.6.4
