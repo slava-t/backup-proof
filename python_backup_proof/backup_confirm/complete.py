@@ -43,8 +43,8 @@ MOUNT_DETECTION_INTERVAL = 3600 #1 hour
 
 DISK_USAGES_CHECK_INTERVAL = 3600 #1 hour
 
-KEEP_VERIFIED = 2 #30
-KEEP_FAILED = 2 #10
+KEEP_VERIFIED = 15
+KEEP_FAILED = 2
 
 DEFAULT_MAX_DISK_USAGE_RATE = 0.75
 
@@ -337,15 +337,22 @@ def check_disk_usages():
       failure_data['text'] = (
         'The following disk usage failures occurred:\n{}'
       ).format('\n'.join(lines))
+    else:
+      failure_data = {
+        'success': True,
+        'text': 'OK'
+      }
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     logger.error('Error in check_disk_usages function: {}'.format(
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
     failure_data['text'] = 'An error occurred while checking disk usages'
-  logger.info('Sending disk usages failure notification for \'{}\''.format(
-    handle
-  ))
+  logger.info(
+    (
+      'Sending disk usages failure notification for \'{}\'. Failure data: {}'
+    ).format(handle, failure_data)
+  )
   notify(handle, failure_data)
 
 def check_mount_status():

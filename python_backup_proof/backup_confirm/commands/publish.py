@@ -3,7 +3,7 @@ from backup_confirm.step import step_success
 from backup_confirm.pack import pack_parts, prune_parts
 from backup_confirm.paths import PUBLISH_DIR
 
-PACKS_TO_KEEP = 3
+PACKS_TO_KEEP = 30
 
 logger = get_logger('publish command')
 
