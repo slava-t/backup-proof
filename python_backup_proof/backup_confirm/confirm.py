@@ -2,7 +2,12 @@ import sys
 import time
 import traceback
 
-from backup_confirm.borg import get_latest_parts, get_borg_credentials
+from backup_confirm.borg import (
+  get_latest_parts,
+  get_borg_credentials,
+  create_repo
+)
+
 from backup_confirm.config import get_enc_config, reset_enc_config
 from backup_confirm.logger import get_logger
 from backup_confirm.process import create_processes
@@ -34,8 +39,6 @@ def process_product(repo_name, repo, product_name, environment_id):
       maxAgeInSeconds=ARCHIVE_MAX_AGE
     ) or {}
     create_processes(repo_name, repo, latest_parts)
-
-
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     logger.error(
@@ -45,6 +48,28 @@ def process_product(repo_name, repo, product_name, environment_id):
         ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
       )
     )
+
+def try_create_repos():
+  try:
+    reset_enc_config()
+    enc_config = get_enc_config()
+    repos = enc_config.get('repos') or {}
+    for _, repo in repos.items():
+      products = repo.get('products') or {}
+      for product_name, product in products.items():
+        environments = product.get('environments') or {}
+        for environment_id in environments:
+          repo_ref, rsh, password = get_borg_credentials(
+            repo,
+            product_name,
+            environment_id
+          )
+          create_repo(rsh, repo_ref, password)
+  except:
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    logger.error('Error in confirm try_create_repos function: {}'.format(
+      ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    ))
 
 def scan_and_process():
   try:
@@ -71,6 +96,7 @@ def scan_and_process():
 
 def main():
   try:
+    try_create_repos()
     while True:
       scan_and_process()
       time.sleep(SCAN_AND_PROCESS_INTERVAL)

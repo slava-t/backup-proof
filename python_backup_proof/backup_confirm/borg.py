@@ -46,6 +46,27 @@ def get_config_borg_credentials():
   repo = repos.get(CONFIRM_REPO_NAME) or {}
   return get_borg_credentials(repo, CONFIRM_PRODUCT, CONFIRM_ENVIRONMENT)
 
+def create_repo(rsh, repo, password):
+  try:
+    borg_bash_command = get_borg_bash_command(
+      rsh,
+      repo,
+      password,
+      '/usr/local/bin/borg init -e repokey'
+    )
+    subprocess.run(
+      [
+        '/bin/bash',
+        '-c',
+        borg_bash_command,
+      ],
+      check=True
+    )
+  except:
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    log_borg_exception(exc_type, exc_value, exc_traceback)
+    return []
+
 def get_borg_list(rsh, repo, password):
   try:
     borg_bash_command = get_borg_bash_command(
