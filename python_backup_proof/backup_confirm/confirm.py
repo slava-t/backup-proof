@@ -16,6 +16,7 @@ from backup_confirm.process import create_processes
 SCAN_AND_PROCESS_INTERVAL = 180 #3 minutes interval
 #SCAN_AND_PROCESS_INTERVAL = 1 #3 minutes interval
 
+INITIAL_WAITING = 10
 RESET_ENC_CONFIG_INTERVAL = 300 #5 minutes interval
 
 ARCHIVE_MAX_AGE = 12 * 3600 #12 hours
@@ -59,6 +60,10 @@ def try_create_repos():
       for product_name, product in products.items():
         environments = product.get('environments') or {}
         for environment_id in environments:
+          logger.info(
+            f'Trying to create repo for {product_name!r} in '
+            f'{environment_id!r} environment'
+          )
           repo_ref, rsh, password = get_borg_credentials(
             repo,
             product_name,
@@ -96,6 +101,7 @@ def scan_and_process():
 
 def main():
   try:
+    time.sleep(INITIAL_WAITING)
     try_create_repos()
     while True:
       scan_and_process()

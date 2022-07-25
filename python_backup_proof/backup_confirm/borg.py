@@ -52,7 +52,7 @@ def create_repo(rsh, repo, password):
       rsh,
       repo,
       password,
-      '/usr/local/bin/borg init -e repokey'
+      '/usr/local/bin/borg init --make-parent-dirs -e repokey'
     )
     subprocess.run(
       [
@@ -65,7 +65,6 @@ def create_repo(rsh, repo, password):
   except:
     exc_type, exc_value, exc_traceback = sys.exc_info()
     log_borg_exception(exc_type, exc_value, exc_traceback)
-    return []
 
 def get_borg_list(rsh, repo, password):
   try:
@@ -253,7 +252,6 @@ def prefix_archive_names(prefix, archives):
 def get_latest_parts(rsh, repo, password, maxAgeInSeconds=3600*24):
   try:
     borg_list = list(reversed(get_borg_list(rsh, repo, password)))
-    #logger.info('borg_list={}'.format(borg_list))
     confirm_map = {}
     for borg_item in borg_list:
       ageInSeconds = (
