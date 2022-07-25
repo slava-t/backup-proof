@@ -8,5 +8,6 @@ python-dateutil==2.6.0
 urllib3==1.26.3
 fabric==2.7.0
 ansible==2.10.7
+yq==3.1.0
 
 
