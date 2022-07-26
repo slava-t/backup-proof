@@ -66,7 +66,7 @@ def pack_parts(ctx, dest_dir, compression=0):
 
   prod_dest_dir = os.path.join(dest_dir, str(CONFIRM_PRODUCT))
   env_dest_dir = os.path.join(prod_dest_dir, str(CONFIRM_ENVIRONMENT))
-  os.makedirs(env_dest_dir, mode=0o600, exist_ok=True)
+  os.makedirs(env_dest_dir, mode=0o755, exist_ok=True)
   parts_dir = ctx['parts_dir']
   logger.info('Packing all parts from \'{}\' to \'{}\''.format(
     parts_dir,

@@ -257,8 +257,6 @@ def scan_and_complete():
       ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     ))
 
-  
-
 def check_zpool_status():
   config = get_config() or {}
   handle = config.get('zpool_status_handle')
