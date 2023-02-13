@@ -28,6 +28,9 @@ from backup_confirm.commands.verify_part_min_size import (
 from backup_confirm.commands.verify_pg_dumpall_completed import(
   run_verify_pg_dumpall_completed
 )
+from backup_confirm.commands.verify_tail_grep_regex import (
+  run_verify_tail_grep_regex
+)
 
 from backup_confirm.commands.verify_postgres_db_restore import (
   run_verify_postgres_db_restore
@@ -72,7 +75,8 @@ commands = {
   'release': run_release,
   'set_options': run_set_options,
   'verify_mysqldump_completed': run_verify_mysqldump_completed,
-  'verify_pg_dumpall_completed': run_verify_pg_dumpall_completed
+  'verify_pg_dumpall_completed': run_verify_pg_dumpall_completed,
+  'verify_tail_grep_regex': run_verify_tail_grep_regex
 }
 
 def get_command_runner(command):
