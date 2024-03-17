@@ -3,7 +3,7 @@ from backup_confirm.pack import pack_parts, prune_parts
 from backup_confirm.paths import RELEASE_DIR
 from backup_confirm.step import step_success
 
-PACKS_TO_KEEP = 12
+PACKS_TO_KEEP = 6
 
 logger = get_logger('release command')
 
