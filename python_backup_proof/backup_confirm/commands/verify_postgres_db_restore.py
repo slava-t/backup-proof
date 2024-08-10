@@ -70,7 +70,7 @@ def run_verify_postgres_db_restore(ctx, params):
     sql_path = os.path.join('/parts', part, file)
     services = {
       'postgres': {
-        'image': 'postgres:12',
+        'image': 'slavat2018/backup-proof-pg12:0.1.0',
         'dirs': ['/var/lib/postgresql/data'],
         'environment': {
           'POSTGRES_PASSWORD': 'abc123'
