@@ -1,13 +1,13 @@
-cython==0.29.21
-requests==2.27.1
+cython==3.0.12
+requests==2.32.3
 borgbackup==1.1.17
-docker-compose==1.29.2
-pyyaml==5.4.1
-humanize==2.4.0
-python-dateutil==2.6.0
-urllib3==1.26.3
+pyyaml==6.0.2
+humanize==4.11.0
+python-dateutil==2.8.2
+urllib3==2.3.0
 fabric==2.7.0
 ansible==2.10.7
 yq==3.1.0
-
+packaging==24.2
+setuptools==75.2.0
 
